@@ -91,9 +91,6 @@ export default function ResultPage() {
               ))}
             </div>
 
-            <div className="mt-5 text-xs text-text-faint bg-surface-2 rounded-md px-3.5 py-2.5">
-              💡 主观题由 AI 评分，分数仅供参考
-            </div>
           </>
         )}
       </div>
