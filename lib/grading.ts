@@ -4,7 +4,9 @@ import { answers } from "./answers";
 import { ExamRecord, Grading, QuestionScore } from "./types";
 import { updateGrading } from "./kv";
 
-const anthropic = new Anthropic();
+const anthropic = new Anthropic({
+  baseURL: process.env.ANTHROPIC_BASE_URL || "https://api.anthropic.com",
+});
 
 function gradeObjective(
   examAnswers: Record<string, string>
