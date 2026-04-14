@@ -1,6 +1,7 @@
 import { listExams } from "@/lib/kv";
 import Link from "next/link";
 import AdminSidebar from "@/components/AdminSidebar";
+import ClearDataButton from "@/components/ClearDataButton";
 
 function ScoreBadge({ score }: { score: number }) {
   let cls = "font-mono font-semibold text-[13px] px-2.5 py-0.5 rounded";
@@ -53,12 +54,15 @@ export default async function DashboardPage() {
       <div className="flex-1 p-7">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-lg font-bold tracking-tight">成绩总览</h1>
-        <a
-          href="/api/admin/export"
-          className="px-4 py-1.5 text-xs font-medium text-text-muted bg-surface border border-border rounded-md shadow-sm hover:bg-surface-2 transition-all"
-        >
-          导出 CSV ↓
-        </a>
+        <div className="flex gap-2">
+          <ClearDataButton />
+          <a
+            href="/api/admin/export"
+            className="px-4 py-1.5 text-xs font-medium text-text-muted bg-surface border border-border rounded-md shadow-sm hover:bg-surface-2 transition-all"
+          >
+            导出 CSV ↓
+          </a>
+        </div>
       </div>
 
       {/* Stat cards */}

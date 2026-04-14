@@ -96,3 +96,18 @@ export async function listExams(): Promise<ExamRecord[]> {
   );
   return exams.filter((e): e is ExamRecord => e !== null);
 }
+
+export async function clearAllExams(): Promise<number> {
+  const index = (await redis.get<string[]>(INDEX_KEY)) || [];
+  if (index.length === 0) return 0;
+
+  // Delete all exam records
+  await Promise.all(
+    index.map((id) => redis.del(`${EXAM_PREFIX}${id}`))
+  );
+
+  // Clear the index
+  await redis.del(INDEX_KEY);
+
+  return index.length;
+}
