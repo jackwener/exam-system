@@ -78,6 +78,35 @@ export default function ExamPage() {
     saveCurrentAnswer(q.id, answer);
   };
 
+  // Arrow keys to navigate between questions
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Skip if user is typing in a text field
+      const target = e.target as HTMLElement;
+      if (
+        target.tagName === "TEXTAREA" ||
+        target.tagName === "INPUT" ||
+        target.isContentEditable
+      ) {
+        return;
+      }
+
+      // Skip if any modifier key is pressed
+      if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
+
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        setCurrentIndex((i) => Math.max(0, i - 1));
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        setCurrentIndex((i) => Math.min(questions.length - 1, i + 1));
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
@@ -153,9 +182,14 @@ export default function ExamPage() {
             ← 上一题
           </button>
 
-          <span className="font-mono text-[13px] text-text-faint">
-            {currentIndex + 1} / {questions.length}
-          </span>
+          <div className="flex flex-col items-center">
+            <span className="font-mono text-[13px] text-text-faint">
+              {currentIndex + 1} / {questions.length}
+            </span>
+            <span className="text-[10px] text-text-faint mt-0.5">
+              提示：← / → 切换题目
+            </span>
+          </div>
 
           {isLast ? (
             <button
