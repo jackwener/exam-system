@@ -35,8 +35,8 @@ export async function createExam(name: string): Promise<ExamRecord> {
         choice: { score: 0, max: 26 },
         multiChoice: { score: 0, max: 20 },
         trueFalse: { score: 0, max: 20 },
-        shortAnswer: { score: 0, max: 10 },
-        scenario: { score: 0, max: 24 },
+        shortAnswer: { score: 0, max: 16 },
+        scenario: { score: 0, max: 18 },
       },
     },
   };
