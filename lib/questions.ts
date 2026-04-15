@@ -1,14 +1,16 @@
 import type { Question, QuestionType, QuestionOption, SubQuestion } from "./types";
 
 const SECTIONS = {
-  choice: "一、选择题（每题 3 分，共 39 分）",
-  trueFalse: "二、判断题（每题 2 分，共 20 分）",
-  shortAnswer: "三、简答题（每题 8 分，共 16 分）",
-  scenario: "四、场景分析题（共 25 分）",
+  choice: "一、选择题（每题 2 分，共 26 分）",
+  multiChoice: "二、多选题（每题 4 分，共 20 分）",
+  trueFalse: "三、判断题（每题 2 分，共 20 分）",
+  shortAnswer: "四、简答题（9 分）",
+  scenario: "五、场景分析题（共 25 分）",
 } as const;
 
 const SECTION_SHORT = {
   choice: "选择题",
+  multiChoice: "多选题",
   trueFalse: "判断题",
   shortAnswer: "简答题",
   scenario: "场景分析",
@@ -30,7 +32,27 @@ function choiceQ(
       label: String.fromCharCode(65 + i),
       text: t,
     })) as QuestionOption[],
-    maxScore: 3,
+    maxScore: 2,
+  };
+}
+
+function mcQ(
+  number: number,
+  text: string,
+  options: string[]
+): Question {
+  return {
+    id: `m${number}`,
+    type: "multiChoice" as QuestionType,
+    section: SECTIONS.multiChoice,
+    sectionShort: SECTION_SHORT.multiChoice,
+    number,
+    text,
+    options: options.map((t, i) => ({
+      label: String.fromCharCode(65 + i),
+      text: t,
+    })) as QuestionOption[],
+    maxScore: 4,
   };
 }
 
@@ -43,14 +65,14 @@ function tfQ(number: number, text: string): Question {
     number,
     text,
     options: [
-      { label: "✓", text: "正确" },
-      { label: "✗", text: "错误" },
+      { label: "\u2713", text: "正确" },
+      { label: "\u2717", text: "错误" },
     ],
     maxScore: 2,
   };
 }
 
-function saQ(number: number, text: string): Question {
+function saQ(number: number, text: string, maxScore: number): Question {
   return {
     id: `sa${number}`,
     type: "shortAnswer" as QuestionType,
@@ -58,7 +80,7 @@ function saQ(number: number, text: string): Question {
     sectionShort: SECTION_SHORT.shortAnswer,
     number,
     text,
-    maxScore: 8,
+    maxScore,
   };
 }
 
@@ -81,7 +103,7 @@ function scQ(
 }
 
 export const questions: Question[] = [
-  // ==================== 选择题 ====================
+  // ==================== 选择题（13 道，每题 2 分） ====================
   choiceQ(1, "Spec Coding 六阶段的正确顺序是？", [
     "Proposal\u2192Design\u2192Spec\u2192Tasks\u2192Test\u2192Trace",
     "Proposal\u2192Spec\u2192Design\u2192Tasks\u2192Test\u2192Trace",
@@ -89,10 +111,10 @@ export const questions: Question[] = [
     "Proposal\u2192Spec\u2192Tasks\u2192Design\u2192Test\u2192Trace",
   ]),
   choiceQ(2, "在 Spec Coding 中，Spec 阶段的核心职责是什么？", [
-    "定义系统架构和技术选型",
+    "定义系统架构分层和数据库 schema",
     `定义\u300c做成什么样\u300d的行为契约，回答 What/Why`,
-    "拆解开发任务并分配给团队成员",
-    "编写测试用例和验收标准",
+    `定义\u300c怎么做\u300d的实现方案，回答 How`,
+    "同时定义行为契约和技术实现，覆盖 What 和 How",
   ]),
   choiceQ(3, `Spec Coding 的三层简约视角中，\u300c执行层\u300d包含哪些阶段？`, [
     "Proposal\u2192Spec",
@@ -107,10 +129,10 @@ export const questions: Question[] = [
     "Design 阶段不涉及技术选型",
   ]),
   choiceQ(5, "Spec Coding 的 Trace（追踪矩阵）阶段的核心价值是什么？", [
-    "追踪项目进度和里程碑",
+    "追溯变更影响范围，防止改一处破多处",
     "确保需求\u2192用户故事\u2192API\u2192测试用例的闭环可追溯",
-    "记录团队成员的工作量",
-    "跟踪线上 Bug 的修复进度",
+    "记录每次代码变更的作者和时间",
+    "收集线上 Bug 数据以驱动下一轮迭代",
   ]),
   choiceQ(6, `Workshop Day 2 \u300cSpec 打印工作流\u300d的核心理念是什么？`, [
     "上午编码\u2192中午打印代码\u2192下午代码审查",
@@ -131,37 +153,74 @@ export const questions: Question[] = [
     "自动生成的测试用例",
   ]),
   choiceQ(9, "关于 MCP（Model Context Protocol）集成网关，以下说法正确的是？", [
-    "MCP 是一种数据库协议",
-    "MCP 标准化了 AI 与外部系统的交互，解耦业务逻辑和工具调用",
-    "MCP 只能用于 HTTP 接口调用",
-    "MCP 是阿里云独有的协议",
+    "MCP 封装了单个 LLM 厂商的 API 调用协议",
+    "MCP 标准化 AI 与外部系统的交互，解耦业务逻辑和工具调用",
+    "MCP 替代了 HTTP/gRPC，让所有工具调用走同一协议栈",
+    "MCP 主要用于 Agent 之间的消息传递",
   ]),
   choiceQ(10, "在 Workshop 的测试环节中，使用 pytest 的 mocker.patch 的目的是什么？", [
-    "修改生产环境的数据",
+    "替换真实数据库，让测试能直接写入生产库验证",
     "模拟外部依赖的返回值，实现单元测试隔离",
-    "自动生成测试报告",
-    "加速测试运行速度",
+    "自动发现并运行所有符合命名规则的测试文件",
+    "在测试失败时自动截图并生成 HTML 报告",
   ]),
   choiceQ(11, "GlueCoding 的核心概念是什么？", [
-    "一种前端 CSS 框架",
+    "把多个独立函数粘合成一个大函数，减少调用层级",
     `数据管道编排，通过\u300c来源\u2192用途\u2192留存\u2192合规\u300d四列简表设计数据流`,
-    "一种代码合并工具",
-    "一种 API 网关协议",
+    "在不同模块之间补写胶水代码，填补接口差异",
+    "用 AI 自动生成模块间的适配层代码",
   ]),
   choiceQ(12, "在 IRA 项目中，企业研发规范要求 PR 描述必须包含哪些内容？", [
-    "只需要代码变更说明",
-    "关联 Spec 文档路径、自测说明、截图或 curl 示例",
-    "只需要截图",
-    "只需要关联的 JIRA 工单号",
+    "代码变更说明 + 截图或 curl 示例",
+    "关联 Spec 文档路径 + 自测说明 + 截图或 curl 示例",
+    "关联 Spec 文档路径 + JIRA 工单号 + 自测说明",
+    "自测说明 + 截图或 curl 示例 + 性能对比数据",
   ]),
   choiceQ(13, "在 Workshop 中配置 CoPaw SKILL 后，钉钉机器人能收到用户消息但回复内容与预期完全不符，最应该优先排查的是？", [
-    "钉钉服务器网络延迟",
-    "SKILL 中的 Prompt 指令和关联的工具（MCP）配置",
-    "JSON 数据文件格式错误",
-    "React 前端组件渲染异常",
+    "SKILL 关联的钉钉渠道 webhook 地址",
+    "SKILL 中的 Prompt 指令和关联的 MCP 工具配置",
+    "CoPaw 的账号登录状态是否过期",
+    "本地 JSON 数据文件的字段是否完整",
   ]),
 
-  // ==================== 判断题 ====================
+  // ==================== 多选题（5 道，每题 4 分） ====================
+  mcQ(1, "你使用 Qoder 开发 IRA 新功能，以下哪些场景应该先启动 /plan 而不是直接写代码？（多选）", [
+    `需求文档含糊，需要先对齐\u300c做成什么样\u300d`,
+    "改一个已知的拼写错误",
+    "涉及多个模块协作，不清楚改动范围",
+    "要引入新的第三方库，需要评估选型",
+    "修复一个 console.log 的输出格式",
+  ]),
+  mcQ(2, "在 Spec Coding 六阶段中，哪些情况下应该回到上一阶段而不是继续往下？（多选）", [
+    "Design 阶段发现 Spec 的行为契约有歧义",
+    "Tasks 阶段发现技术方案有性能问题",
+    "Test 阶段发现某个 US 没有对应的 API",
+    "写代码时发现变量命名风格和团队不符",
+    "Trace 阶段发现某条需求无法追溯到测试",
+  ]),
+  mcQ(3, "对于 AI 生成的代码，以下哪些情况不能直接 merge，必须人工审核？（多选）", [
+    "涉及用户数据库的写操作",
+    "新增了外部 API 调用",
+    "改动涉及金额、权限等敏感逻辑",
+    "改了一个按钮的文案",
+    "依赖的第三方库出现大版本变更",
+  ]),
+  mcQ(4, `你给 IRA 项目添加\u300c舆情监控\u300d功能，以下哪些是决定是否拆成多 Agent 的合理依据？（多选）`, [
+    "不同环节需要调用不同的外部工具",
+    "每个环节的输入输出格式不一样，需要独立处理",
+    "某些环节需要定时触发，其他环节实时响应",
+    "代码量超过 500 行",
+    "不同环节的失败不应该互相影响",
+  ]),
+  mcQ(5, "用 AI 帮你改代码时，以下哪些做法是 Workshop 推荐的工作方式？（多选）", [
+    `先在 Spec 里讲清楚\u300c改什么、为什么改\u300d，再让 AI 动手`,
+    "让 AI 生成代码后，要求它先跑一遍自测",
+    "关键改动要求 AI 画出变更影响范围，再让人工 Review",
+    `直接说\u300c帮我优化这个函数\u300d，让 AI 自由发挥`,
+    "让 AI 改完后，在 PR 描述里关联 Spec 路径、自测说明、截图",
+  ]),
+
+  // ==================== 判断题（10 道，每题 2 分） ====================
   tfQ(1, "Proposal 阶段的核心职责是做可行性判断和范围框定，不展开功能细节和技术方案。"),
   tfQ(2, `在 Spec Coding 中，Design 阶段回答的核心问题是\u300c做成什么样？行为契约是什么？\u300d`),
   tfQ(3, "Qoder 的反思模式用于让 AI 完成任务后进行自我验证和修正，人类再审核确认。"),
@@ -173,11 +232,10 @@ export const questions: Question[] = [
   tfQ(9, "Qoder 中的 Quest 模式适用于探索性的问题诊断和技术调研。"),
   tfQ(10, "CoPaw 的一个 SKILL 只能绑定一个固定的 MCP 工具，如果 Agent 需要同时查询股票行情和研报数据，必须创建两个独立的 SKILL 分别处理。"),
 
-  // ==================== 简答题 ====================
-  saQ(1, "请简要描述 Spec Coding 六阶段各自回答的核心问题，以及三层简约视角如何将六个阶段分组。"),
-  saQ(2, "请描述 IRA 项目的目标用户群体（至少两类）和核心功能范围（Must 级别），并解释为什么选择 Flask + React(Vite) + JSON 文件存储这一技术栈。"),
+  // ==================== 简答题（1 道，9 分） ====================
+  saQ(1, "请简要描述 Spec Coding 六阶段各自回答的核心问题，以及三层简约视角如何将六个阶段分组。", 9),
 
-  // ==================== 场景分析题 ====================
+  // ==================== 场景分析题（共 25 分） ====================
   scQ(
     1,
     "测试与质量保障 - 你负责 IRA 项目的研报列表接口测试，该接口从 JSON 文件读取数据并返回研报列表。请回答以下问题：",
@@ -203,6 +261,6 @@ export const questions: Question[] = [
 export const EXAM_CONFIG = {
   title: "AI Coding Workshop 结业考试",
   duration: 1200,
-  totalQuestions: 27,
+  totalQuestions: 31,
   totalScore: 100,
 } as const;

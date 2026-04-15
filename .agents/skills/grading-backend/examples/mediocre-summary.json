@@ -1,0 +1,26 @@
+{
+  "team": "team-calibration-mediocre",
+  "side": "backend",
+  "total": 54.1,
+  "grade": "D",
+  "dimensions": [
+    {"name": "spec-conformance", "score": 7, "weight": 20, "weighted": 14.0},
+    {"name": "robustness", "score": 5, "weight": 15, "weighted": 7.5},
+    {"name": "api-design", "score": 6, "weight": 12, "weighted": 7.2},
+    {"name": "testing", "score": 4, "weight": 12, "weighted": 4.8},
+    {"name": "data-modeling", "score": 5, "weight": 10, "weighted": 5.0},
+    {"name": "layering", "score": 5, "weight": 10, "weighted": 5.0},
+    {"name": "performance", "score": 6, "weight": 8, "weighted": 4.8},
+    {"name": "observability", "score": 4, "weight": 7, "weighted": 2.8},
+    {"name": "documentation", "score": 5, "weight": 6, "weighted": 3.0}
+  ],
+  "top_fixes": [
+    "统一错误响应 + 补异常处理",
+    "controller 剥离 DB 访问 (引入 repos 层)",
+    "测试覆盖率 34% -> 70%+"
+  ],
+  "evidence_count": 32,
+  "spec_sha": "a1b2c3d",
+  "project_sha": "3e2f1a0",
+  "graded_at": "2026-04-14T11:30:00Z"
+}

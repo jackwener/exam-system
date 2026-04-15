@@ -8,6 +8,50 @@ const anthropic = new Anthropic({
   baseURL: process.env.ANTHROPIC_BASE_URL || "https://api.anthropic.com",
 });
 
+function gradeMultiChoice(
+  studentAnswer: string,
+  correctAnswer: string,
+  maxScore: number
+): QuestionScore {
+  const studentSet = new Set(
+    studentAnswer
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean)
+  );
+  const correctSet = new Set(
+    correctAnswer
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean)
+  );
+
+  // Unanswered
+  if (studentSet.size === 0) {
+    return { score: 0, maxScore, correct: false };
+  }
+
+  // Any wrong selection → 0 points
+  for (const s of studentSet) {
+    if (!correctSet.has(s)) {
+      return { score: 0, maxScore, correct: false };
+    }
+  }
+
+  // All correct answers selected → full score
+  const allSelected = [...correctSet].every((c) => studentSet.has(c));
+  if (allSelected) {
+    return { score: maxScore, maxScore, correct: true };
+  }
+
+  // Partial correct (no wrong selections, but missing some) → half score
+  return {
+    score: Math.floor(maxScore / 2),
+    maxScore,
+    correct: false,
+  };
+}
+
 function gradeObjective(
   examAnswers: Record<string, string>
 ): Record<string, QuestionScore> {
@@ -20,13 +64,21 @@ function gradeObjective(
     if (!q) continue;
 
     const studentAnswer = examAnswers[ans.questionId] || "";
-    const correct = studentAnswer === ans.correctAnswer;
 
-    scores[ans.questionId] = {
-      score: correct ? q.maxScore : 0,
-      maxScore: q.maxScore,
-      correct,
-    };
+    if (q.type === "multiChoice") {
+      scores[ans.questionId] = gradeMultiChoice(
+        studentAnswer,
+        ans.correctAnswer,
+        q.maxScore
+      );
+    } else {
+      const correct = studentAnswer === ans.correctAnswer;
+      scores[ans.questionId] = {
+        score: correct ? q.maxScore : 0,
+        maxScore: q.maxScore,
+        correct,
+      };
+    }
   }
 
   return scores;
@@ -143,15 +195,18 @@ export async function gradeExam(exam: ExamRecord): Promise<void> {
 
   // Calculate breakdown
   const breakdown = {
-    choice: { score: 0, max: 39 },
+    choice: { score: 0, max: 26 },
+    multiChoice: { score: 0, max: 20 },
     trueFalse: { score: 0, max: 20 },
-    shortAnswer: { score: 0, max: 16 },
+    shortAnswer: { score: 0, max: 9 },
     scenario: { score: 0, max: 25 },
   };
 
   for (const q of questions) {
     if (q.type === "choice" && scores[q.id]) {
       breakdown.choice.score += scores[q.id].score;
+    } else if (q.type === "multiChoice" && scores[q.id]) {
+      breakdown.multiChoice.score += scores[q.id].score;
     } else if (q.type === "trueFalse" && scores[q.id]) {
       breakdown.trueFalse.score += scores[q.id].score;
     } else if (q.type === "shortAnswer" && scores[q.id]) {
@@ -170,6 +225,7 @@ export async function gradeExam(exam: ExamRecord): Promise<void> {
 
   const totalScore =
     breakdown.choice.score +
+    breakdown.multiChoice.score +
     breakdown.trueFalse.score +
     breakdown.shortAnswer.score +
     breakdown.scenario.score;

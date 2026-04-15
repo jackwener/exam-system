@@ -1,4 +1,4 @@
-export type QuestionType = "choice" | "trueFalse" | "shortAnswer" | "scenario";
+export type QuestionType = "choice" | "multiChoice" | "trueFalse" | "shortAnswer" | "scenario";
 
 export interface QuestionOption {
   label: string; // "A", "B", "C", "D"
@@ -38,6 +38,7 @@ export interface QuestionScore {
 
 export interface GradingBreakdown {
   choice: { score: number; max: number };
+  multiChoice: { score: number; max: number };
   trueFalse: { score: number; max: number };
   shortAnswer: { score: number; max: number };
   scenario: { score: number; max: number };

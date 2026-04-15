@@ -1,0 +1,27 @@
+{
+  "team": "team-calibration-good",
+  "side": "frontend",
+  "total": 84.8,
+  "grade": "A",
+  "dimensions": [
+    {"name": "spec-conformance", "score": 9, "weight": 20, "weighted": 18.0},
+    {"name": "theme-aesthetic", "score": 8, "weight": 12, "weighted": 9.6},
+    {"name": "animation", "score": 8, "weight": 10, "weighted": 8.0},
+    {"name": "state-completeness", "score": 9, "weight": 10, "weighted": 9.0},
+    {"name": "code-quality", "score": 9, "weight": 10, "weighted": 9.0},
+    {"name": "responsive", "score": 8, "weight": 8, "weighted": 6.4},
+    {"name": "forms", "score": 9, "weight": 8, "weighted": 7.2},
+    {"name": "performance", "score": 9, "weight": 8, "weighted": 7.2},
+    {"name": "a11y", "score": 7, "weight": 8, "weighted": 5.6},
+    {"name": "microcopy", "score": 8, "weight": 6, "weighted": 4.8}
+  ],
+  "top_fixes": [
+    "a11y 对比度 + Esc 关闭 + aria-label",
+    "删除确认替换为自定义 Dialog",
+    "错误态加重试按钮 & Loading 文案具体化"
+  ],
+  "evidence_count": 38,
+  "spec_sha": "f27be3a6",
+  "project_sha": "a1b2c3d4",
+  "graded_at": "2026-04-14T10:00:00Z"
+}

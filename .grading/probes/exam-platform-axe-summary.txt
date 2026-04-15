@@ -1,0 +1,3 @@
+team:         exam-platform
+url:          http://localhost:3000/exam
+status:       NO_REPORT

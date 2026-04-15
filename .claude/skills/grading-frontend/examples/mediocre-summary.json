@@ -1,0 +1,27 @@
+{
+  "team": "team-calibration-mediocre",
+  "side": "frontend",
+  "total": 54.6,
+  "grade": "D",
+  "dimensions": [
+    {"name": "spec-conformance", "score": 7, "weight": 20, "weighted": 14.0},
+    {"name": "theme-aesthetic", "score": 4, "weight": 12, "weighted": 4.8},
+    {"name": "animation", "score": 4, "weight": 10, "weighted": 4.0},
+    {"name": "state-completeness", "score": 6, "weight": 10, "weighted": 6.0},
+    {"name": "code-quality", "score": 6, "weight": 10, "weighted": 6.0},
+    {"name": "responsive", "score": 6, "weight": 8, "weighted": 4.8},
+    {"name": "forms", "score": 6, "weight": 8, "weighted": 4.8},
+    {"name": "performance", "score": 6, "weight": 8, "weighted": 4.8},
+    {"name": "a11y", "score": 3, "weight": 8, "weighted": 2.4},
+    {"name": "microcopy", "score": 5, "weight": 6, "weighted": 3.0}
+  ],
+  "top_fixes": [
+    "删除 *:focus { outline: none } 并补齐 aria-label",
+    "修复 TaskList 的无限刷接口 + 删除无确认",
+    "全局替换 alert / No data / OK/Cancel"
+  ],
+  "evidence_count": 30,
+  "spec_sha": "f27be3a6",
+  "project_sha": "e9f8d7c6",
+  "graded_at": "2026-04-14T10:30:00Z"
+}

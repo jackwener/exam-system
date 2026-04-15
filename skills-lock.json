@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "skills": {
+    "grading-backend": {
+      "source": "jackwener/group-workshop",
+      "sourceType": "github",
+      "computedHash": "4631cd7a86f7b28ed1c46e7bdb6b24f5167702265f6bcf5dc6121486e7fe20f7"
+    },
+    "grading-frontend": {
+      "source": "jackwener/group-workshop",
+      "sourceType": "github",
+      "computedHash": "8f60befbadb97de8c90a76b7f6587d27970af40d6bf2c411abade9ebc7f6f185"
+    }
+  }
+}

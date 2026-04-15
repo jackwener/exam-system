@@ -98,6 +98,9 @@ export default async function DashboardPage() {
                 选择题
               </th>
               <th className="text-left px-3.5 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-text-faint">
+                多选题
+              </th>
+              <th className="text-left px-3.5 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-text-faint">
                 判断题
               </th>
               <th className="text-left px-3.5 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-text-faint">
@@ -132,6 +135,9 @@ export default async function DashboardPage() {
                   {exam.grading.breakdown.choice.score}
                 </td>
                 <td className="px-3.5 py-2.5 text-[13px] text-text-secondary">
+                  {exam.grading.breakdown.multiChoice?.score ?? 0}
+                </td>
+                <td className="px-3.5 py-2.5 text-[13px] text-text-secondary">
                   {exam.grading.breakdown.trueFalse.score}
                 </td>
                 <td className="px-3.5 py-2.5 text-[13px] text-text-secondary">
@@ -156,7 +162,7 @@ export default async function DashboardPage() {
             {sorted.length === 0 && (
               <tr>
                 <td
-                  colSpan={7}
+                  colSpan={8}
                   className="px-3.5 py-8 text-center text-sm text-text-faint"
                 >
                   暂无考试数据

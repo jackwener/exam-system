@@ -16,6 +16,13 @@ export const answers: Answer[] = [
   { questionId: "c12", correctAnswer: "B" },
   { questionId: "c13", correctAnswer: "B" },
 
+  // === 多选题（用逗号分隔的字母序列，如 "A,C,D"，要求按字母顺序） ===
+  { questionId: "m1", correctAnswer: "A,C,D" },
+  { questionId: "m2", correctAnswer: "A,B,C,E" },
+  { questionId: "m3", correctAnswer: "A,B,C,E" },
+  { questionId: "m4", correctAnswer: "A,B,C,E" },
+  { questionId: "m5", correctAnswer: "A,B,C,E" },
+
   // === 判断题 ===
   { questionId: "tf1", correctAnswer: "true" },
   { questionId: "tf2", correctAnswer: "false" },
@@ -31,7 +38,7 @@ export const answers: Answer[] = [
   // === 简答题 ===
   {
     questionId: "sa1",
-    rubric: `评分标准（满分 8 分）：
+    rubric: `评分标准（满分 9 分）：
 六阶段核心问题（共 3 分，每个 0.5 分）：
 - Proposal：做不做？边界在哪？
 - Spec：做成什么样？行为契约是什么？
@@ -40,31 +47,12 @@ export const answers: Answer[] = [
 - Test：怎么验？门禁是什么？
 - Trace：闭环了吗？变更可控吗？
 
-三层简约视角（共 3 分，每层 1 分）：
+三层简约视角（共 4 分，每层分组 1 分 + 每层核心问题 0.3 分）：
 - 决策层（Proposal → Spec）：做不做？做成什么样？
 - 执行层（Design → Tasks）：怎么做？谁来做？
 - 验证层（Test → Trace）：做对了吗？可追溯吗？
 
 表述清晰完整：2 分`,
-  },
-  {
-    questionId: "sa2",
-    rubric: `评分标准（满分 8 分）：
-目标用户（2 分，至少两类）：
-- 卖方/买方研究员：信息分散、报告复盘效率低、跨源比对耗时
-- 基金经理/投资经理：投前会议准备时间短、观点证据链不完整
-- 投研实习生/助理：研究框架不稳定、结论可解释性弱
-
-核心功能 Must 级别（3 分）：
-- 多源信息汇总（新闻、公告、研报摘要、财务关键指标）
-- 问题驱动回答
-- 结构化输出（摘要、核心观点、证据、风险、后续跟踪项）
-- 引用来源标注（每条结论至少1个来源）
-
-技术栈选型理由（3 分）：
-- Flask 轻量适合 MVP 快速开发
-- React/Vite 提供现代化前端体验且热更新快
-- JSON 文件存储在 Demo 阶段避免数据库运维复杂度，降低学员环境搭建门槛`,
   },
 
   // === 场景分析题 ===

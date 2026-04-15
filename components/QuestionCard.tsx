@@ -2,6 +2,7 @@
 
 import { Question } from "@/lib/types";
 import ChoiceQuestion from "./ChoiceQuestion";
+import MultiChoiceQuestion from "./MultiChoiceQuestion";
 import TrueFalseQuestion from "./TrueFalseQuestion";
 import ShortAnswerQuestion from "./ShortAnswerQuestion";
 
@@ -23,6 +24,9 @@ export default function QuestionCard({ question, answer, onChange }: QuestionCar
 
       {question.type === "choice" && (
         <ChoiceQuestion question={question} answer={answer} onChange={onChange} />
+      )}
+      {question.type === "multiChoice" && (
+        <MultiChoiceQuestion question={question} answer={answer} onChange={onChange} />
       )}
       {question.type === "trueFalse" && (
         <TrueFalseQuestion question={question} answer={answer} onChange={onChange} />

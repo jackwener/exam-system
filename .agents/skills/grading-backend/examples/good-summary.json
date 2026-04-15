@@ -1,0 +1,26 @@
+{
+  "team": "team-calibration-good",
+  "side": "backend",
+  "total": 84.7,
+  "grade": "A",
+  "dimensions": [
+    {"name": "spec-conformance", "score": 9, "weight": 20, "weighted": 18.0},
+    {"name": "robustness", "score": 8, "weight": 15, "weighted": 12.0},
+    {"name": "api-design", "score": 10, "weight": 12, "weighted": 12.0},
+    {"name": "testing", "score": 8, "weight": 12, "weighted": 9.6},
+    {"name": "data-modeling", "score": 8, "weight": 10, "weighted": 8.0},
+    {"name": "layering", "score": 9, "weight": 10, "weighted": 9.0},
+    {"name": "performance", "score": 8, "weight": 8, "weighted": 6.4},
+    {"name": "observability", "score": 7, "weight": 7, "weighted": 4.9},
+    {"name": "documentation", "score": 8, "weight": 6, "weighted": 4.8}
+  ],
+  "top_fixes": [
+    "补幂等键 (Idempotency-Key header + Redis 24h 缓存)",
+    "加复合索引 (userId, status, createdAt DESC)",
+    "接入 OpenTelemetry 导出 p95 直方图"
+  ],
+  "evidence_count": 36,
+  "spec_sha": "a1b2c3d",
+  "project_sha": "9f8e7d6",
+  "graded_at": "2026-04-14T11:00:00Z"
+}
