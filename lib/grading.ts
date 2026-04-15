@@ -198,8 +198,8 @@ export async function gradeExam(exam: ExamRecord): Promise<void> {
     choice: { score: 0, max: 26 },
     multiChoice: { score: 0, max: 20 },
     trueFalse: { score: 0, max: 20 },
-    shortAnswer: { score: 0, max: 9 },
-    scenario: { score: 0, max: 25 },
+    shortAnswer: { score: 0, max: 10 },
+    scenario: { score: 0, max: 24 },
   };
 
   for (const q of questions) {

@@ -4,8 +4,8 @@ const SECTIONS = {
   choice: "一、选择题（每题 2 分，共 26 分）",
   multiChoice: "二、多选题（每题 4 分，共 20 分）",
   trueFalse: "三、判断题（每题 2 分，共 20 分）",
-  shortAnswer: "四、简答题（9 分）",
-  scenario: "五、场景分析题（共 25 分）",
+  shortAnswer: "四、简答题（每题 5 分，共 10 分）",
+  scenario: "五、场景分析题（共 24 分）",
 } as const;
 
 const SECTION_SHORT = {
@@ -232,17 +232,26 @@ export const questions: Question[] = [
   tfQ(9, "Qoder 中的 Quest 模式适用于探索性的问题诊断和技术调研。"),
   tfQ(10, "CoPaw 的一个 SKILL 只能绑定一个固定的 MCP 工具，如果 Agent 需要同时查询股票行情和研报数据，必须创建两个独立的 SKILL 分别处理。"),
 
-  // ==================== 简答题（1 道，9 分） ====================
-  saQ(1, "请简要描述 Spec Coding 六阶段各自回答的核心问题，以及三层简约视角如何将六个阶段分组。", 9),
+  // ==================== 简答题（2 道，每题 5 分） ====================
+  saQ(
+    1,
+    `Qoder 的智能体模式、专家团模式、智能问答、/plan 模式、Quest 模式 这五种模式分别适用于什么样的场景？请说明原因。`,
+    5
+  ),
+  saQ(
+    2,
+    "请简要描述 Spec Coding 六阶段各自回答的核心问题，以及三层简约视角如何将六个阶段分组。",
+    5
+  ),
 
-  // ==================== 场景分析题（共 25 分） ====================
+  // ==================== 场景分析题（共 24 分） ====================
   scQ(
     1,
     "测试与质量保障 - 你负责 IRA 项目的研报列表接口测试，该接口从 JSON 文件读取数据并返回研报列表。请回答以下问题：",
-    13,
+    12,
     [
       { id: "sc1a", text: "(a) 请列出该接口至少需要覆盖的 3 个测试场景（正常和异常）。（3分）", maxScore: 3 },
-      { id: "sc1b", text: `(b) 针对\u300cJSON 文件为空\u300d的场景，请写出使用 pytest + mocker 的测试代码思路（伪代码即可），说明如何用 mocker.patch 模拟这个场景。（5分）`, maxScore: 5 },
+      { id: "sc1b", text: `(b) 针对\u300cJSON 文件为空\u300d的场景，请写出使用 pytest + mocker 的测试代码思路（伪代码即可），说明如何用 mocker.patch 模拟这个场景。（4分）`, maxScore: 4 },
       { id: "sc1c", text: "(c) 如果发现某条 P0 级用户故事（US）在 Test 阶段没有对应的测试用例（TC），你应该如何处理？这反映了 Trace 追踪矩阵的什么价值？（5分）", maxScore: 5 },
     ]
   ),
@@ -261,6 +270,6 @@ export const questions: Question[] = [
 export const EXAM_CONFIG = {
   title: "AI Coding Workshop 结业考试",
   duration: 1200,
-  totalQuestions: 31,
+  totalQuestions: 32,
   totalScore: 100,
 } as const;
