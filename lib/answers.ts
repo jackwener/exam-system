@@ -74,7 +74,7 @@ export const answers: Answer[] = [
   // === 场景分析题（多 Agent 系统设计） ===
   {
     questionId: "sc1a",
-    rubric: `评分标准（满分 5 分）：
+    rubric: `评分标准（满分 4 分）：
 至少设计 3 个 Agent 角色，每个角色职责清晰即可得分。
 
 参考角色：
@@ -86,13 +86,13 @@ export const answers: Answer[] = [
   },
   {
     questionId: "sc1b",
-    rubric: `评分标准（满分 7 分）：
-协作流程完整性（4 分）：
+    rubric: `评分标准（满分 5 分）：
+协作流程完整性（3 分）：
 - 触发方式（定时 / 事件驱动 / 用户请求）
 - Agent 之间的调用顺序（采集 → 分析 → 生成 → 推送）
 - 数据传递格式或中间结构
 
-关键节点说明（3 分）：
+关键节点说明（2 分）：
 - 数据格式转换 / 标准化节点
 - 异常处理或重试机制
 - 最终输出方式（如通过 CoPaw 推送到钉钉群）
@@ -101,8 +101,8 @@ export const answers: Answer[] = [
   },
   {
     questionId: "sc1c",
-    rubric: `评分标准（满分 6 分）：
-结合 GlueCoding "来源→用途→留存→合规"思路（每个维度约 1.5 分）：
+    rubric: `评分标准（满分 5 分）：
+结合 GlueCoding "来源→用途→留存→合规"思路（每个维度约 1.25 分）：
 - 来源：JSON 来源直接解析；HTML 来源通过解析器（如 BeautifulSoup）提取结构化字段
 - 用途：统一转换为标准中间格式（如统一的 JSON schema），供分析 Agent 使用
 - 留存：标准化后的数据存储为统一格式，原始数据保留备查（可追溯原始）
