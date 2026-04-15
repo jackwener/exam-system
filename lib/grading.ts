@@ -97,18 +97,25 @@ async function gradeSubjectiveQuestion(
 
   try {
     const response = await anthropic.messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 300,
+      model: "glm-4.7",
+      max_tokens: 400,
+      temperature: 0,
       messages: [
         {
           role: "user",
-          content: `你是一位 AI Coding Workshop 的考试评分员。
-请根据以下评分标准，对考生的回答进行评分。
+          content: `你是一位 AI Coding Workshop 的考试评分员，专业且宽容。
+
+## 评分原则（重要）
+1. **看整体合理性，不死扣关键词**：评分标准只是"参考要点"，不是必须逐字对应。如果考生用不同表述、不同例子、不同角度但表达了相同的核心思想，应当给分。
+2. **思路对就给大部分分**：只要考生对核心概念的理解是对的、思路是合理的，即使没有覆盖参考要点的全部维度，也应给到 70%~85% 的分数。
+3. **完整且深入再给满分**：覆盖了核心要点，并且表述清晰、有自己的理解或合理扩展，给到 90%~100%。
+4. **明显错误或答非所问才扣大分**：核心理解错误、概念混淆、完全偏题，才给低分。
+5. **宁宽勿严**：边界情况倾向于给分而非扣分。考试目的是检验理解，不是抓字面错误。
 
 ## 题目
 ${questionText}
 
-## 评分标准
+## 评分标准（参考要点，非死板对照）
 ${rubric}
 
 ## 满分
@@ -117,8 +124,8 @@ ${maxScore} 分
 ## 考生回答
 ${studentAnswer}
 
-请返回 JSON 格式（不要包含其他内容）：
-{"score": <0到${maxScore}的整数>, "feedback": "<评分理由，50字以内>"}`,
+请综合评估考生回答的整体合理性后给分，返回 JSON 格式（不要包含其他内容）：
+{"score": <0到${maxScore}的整数>, "feedback": "<评分理由，说明给分依据，50字以内>"}`,
         },
       ],
     });
