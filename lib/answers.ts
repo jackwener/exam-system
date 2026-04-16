@@ -27,7 +27,7 @@ export const answers: Answer[] = [
   { questionId: "tf1", correctAnswer: "true" },
   { questionId: "tf2", correctAnswer: "false" },
   { questionId: "tf3", correctAnswer: "true" },
-  { questionId: "tf4", correctAnswer: "false" },
+  { questionId: "tf4", correctAnswer: "true" },
   { questionId: "tf5", correctAnswer: "true" },
   { questionId: "tf6", correctAnswer: "true" },
   { questionId: "tf7", correctAnswer: "true" },
