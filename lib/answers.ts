@@ -33,7 +33,7 @@ export const answers: Answer[] = [
   { questionId: "tf7", correctAnswer: "true" },
   { questionId: "tf8", correctAnswer: "true" },
   { questionId: "tf9", correctAnswer: "true" },
-  { questionId: "tf10", correctAnswer: "false" },
+  { questionId: "tf10", correctAnswer: "true" },
 
   // === 简答题 ===
   {
