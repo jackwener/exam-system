@@ -30,10 +30,18 @@ export async function POST(request: Request) {
       .digest("hex");
     const token = `${payload}.${signature}`;
 
+    // Only mark cookie as Secure when the request is actually over HTTPS.
+    // Otherwise browsers silently drop the cookie on plain-http deployments
+    // (e.g. self-hosted on an IP without TLS), causing login to appear to
+    // "succeed" but the next page immediately bounces back to /admin/login.
+    const forwardedProto = request.headers.get("x-forwarded-proto");
+    const urlProto = new URL(request.url).protocol.replace(":", "");
+    const isHttps = (forwardedProto || urlProto) === "https";
+
     const response = NextResponse.json({ ok: true });
     response.cookies.set(COOKIE_NAME, token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: isHttps,
       sameSite: "lax",
       maxAge: COOKIE_MAX_AGE,
       path: "/",
