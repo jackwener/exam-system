@@ -1,13 +1,10 @@
 import { NextResponse } from "next/server";
 import { clearAllExams } from "@/lib/kv";
 
-export async function POST(request: Request) {
-  // Check admin auth via cookie
-  const cookie = request.headers.get("cookie") || "";
-  if (!cookie.includes("admin_token=")) {
-    return NextResponse.json({ error: "未授权" }, { status: 401 });
-  }
+// Auth is enforced by proxy.ts for /api/admin/:path* (except /api/admin/auth).
+// This handler is guaranteed to run only after a valid admin token is present.
 
+export async function POST() {
   try {
     const count = await clearAllExams();
     return NextResponse.json({ ok: true, deleted: count });

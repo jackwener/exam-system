@@ -19,24 +19,8 @@ export default function ExamPage() {
   const [submitting, setSubmitting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
-  // Load exam data
+  // Load exam record to get answers and timing
   useEffect(() => {
-    fetch(`/api/exam/status?id=${examId}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.error) {
-          router.push("/exam");
-          return;
-        }
-        // Load full exam for startedAt
-        fetch(`/api/exam/start`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ examId }),
-        });
-      });
-
-    // Load exam record to get answers and timing
     fetch(`/api/exam/load?id=${examId}`)
       .then((res) => res.json())
       .then((data) => {
