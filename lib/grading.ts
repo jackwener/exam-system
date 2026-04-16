@@ -107,7 +107,7 @@ async function callGradingApi(
   studentAnswer: string
 ): Promise<{ score: number; feedback: string }> {
   const response = await anthropic.messages.create({
-    model: "glm-4.7",
+    model: "glm-4.5",
     max_tokens: 400,
     temperature: 0,
     messages: [
@@ -163,6 +163,11 @@ ${studentAnswer}
   };
 }
 
+const MAX_ATTEMPTS = 4; // 1 initial + 3 retries
+const BASE_DELAY_MS = 800; // exponential: 0.8s, 1.6s, 3.2s between retries
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
 async function gradeSubjectiveQuestion(
   questionId: string,
   questionText: string,
@@ -174,9 +179,12 @@ async function gradeSubjectiveQuestion(
     return { score: 0, maxScore, feedback: "未作答" };
   }
 
-  // Retry once on failure — GLM occasionally returns malformed JSON
+  // Retry with exponential backoff. GLM can fail due to:
+  //   - Transient rate limits when many students submit at once
+  //   - Malformed JSON response (usually fixed on retry with temperature=0)
+  //   - Network blips between ECS and open.bigmodel.cn
   let lastError: unknown = null;
-  for (let attempt = 1; attempt <= 2; attempt++) {
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     try {
       const result = await callGradingApi(
         questionText,
@@ -184,6 +192,9 @@ async function gradeSubjectiveQuestion(
         maxScore,
         studentAnswer
       );
+      if (attempt > 1) {
+        console.log(`Grading succeeded for ${questionId} on attempt ${attempt}`);
+      }
       return {
         score: Math.min(Math.max(0, Math.round(result.score)), maxScore),
         maxScore,
@@ -192,12 +203,21 @@ async function gradeSubjectiveQuestion(
     } catch (error) {
       lastError = error;
       console.error(
-        `Grading attempt ${attempt} failed for ${questionId}:`,
-        error
+        `Grading attempt ${attempt}/${MAX_ATTEMPTS} failed for ${questionId}:`,
+        error instanceof Error ? error.message : error
       );
+      if (attempt < MAX_ATTEMPTS) {
+        // Exponential backoff with small jitter
+        const delay =
+          BASE_DELAY_MS * Math.pow(2, attempt - 1) + Math.random() * 200;
+        await sleep(delay);
+      }
     }
   }
-  console.error(`All grading attempts failed for ${questionId}:`, lastError);
+  console.error(
+    `All ${MAX_ATTEMPTS} grading attempts failed for ${questionId}:`,
+    lastError
+  );
   return { score: 0, maxScore, feedback: "评分失败，请联系管理员" };
 }
 
