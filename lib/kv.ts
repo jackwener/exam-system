@@ -1,14 +1,41 @@
-import { Redis } from "@upstash/redis";
+import Redis from "ioredis";
 import { nanoid } from "nanoid";
 import { ExamRecord, Grading } from "./types";
 
-const redis = new Redis({
-  url: process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL || "",
-  token: process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || "",
-});
+// Singleton Redis client - reuse across requests
+declare global {
+  // eslint-disable-next-line no-var
+  var __redis: Redis | undefined;
+}
+
+function getRedis(): Redis {
+  if (!global.__redis) {
+    global.__redis = new Redis(process.env.REDIS_URL || "redis://127.0.0.1:6379", {
+      maxRetriesPerRequest: 3,
+      lazyConnect: false,
+    });
+  }
+  return global.__redis;
+}
+
+const redis = getRedis();
 
 const EXAM_PREFIX = "exam:";
 const INDEX_KEY = "exam:index";
+
+async function getJSON<T>(key: string): Promise<T | null> {
+  const raw = await redis.get(key);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    return null;
+  }
+}
+
+async function setJSON(key: string, value: unknown): Promise<void> {
+  await redis.set(key, JSON.stringify(value));
+}
 
 export async function createExam(name: string): Promise<ExamRecord> {
   // Check for duplicate name
@@ -41,18 +68,18 @@ export async function createExam(name: string): Promise<ExamRecord> {
     },
   };
 
-  await redis.set(`${EXAM_PREFIX}${id}`, record);
+  await setJSON(`${EXAM_PREFIX}${id}`, record);
 
   // Add to index
-  const index = (await redis.get<string[]>(INDEX_KEY)) || [];
+  const index = (await getJSON<string[]>(INDEX_KEY)) || [];
   index.push(id);
-  await redis.set(INDEX_KEY, index);
+  await setJSON(INDEX_KEY, index);
 
   return record;
 }
 
 export async function getExam(id: string): Promise<ExamRecord | null> {
-  return redis.get<ExamRecord>(`${EXAM_PREFIX}${id}`);
+  return getJSON<ExamRecord>(`${EXAM_PREFIX}${id}`);
 }
 
 export async function saveAnswer(
@@ -65,7 +92,7 @@ export async function saveAnswer(
   if (exam.submittedAt) throw new Error("考试已提交，无法修改");
 
   exam.answers[questionId] = answer;
-  await redis.set(`${EXAM_PREFIX}${id}`, exam);
+  await setJSON(`${EXAM_PREFIX}${id}`, exam);
 }
 
 export async function submitExam(id: string): Promise<ExamRecord> {
@@ -75,7 +102,7 @@ export async function submitExam(id: string): Promise<ExamRecord> {
 
   exam.submittedAt = Date.now();
   exam.grading.status = "grading";
-  await redis.set(`${EXAM_PREFIX}${id}`, exam);
+  await setJSON(`${EXAM_PREFIX}${id}`, exam);
   return exam;
 }
 
@@ -87,19 +114,17 @@ export async function updateGrading(
   if (!exam) throw new Error("考试不存在");
 
   exam.grading = grading;
-  await redis.set(`${EXAM_PREFIX}${id}`, exam);
+  await setJSON(`${EXAM_PREFIX}${id}`, exam);
 }
 
 export async function listExams(): Promise<ExamRecord[]> {
-  const index = (await redis.get<string[]>(INDEX_KEY)) || [];
-  const exams = await Promise.all(
-    index.map((id) => getExam(id))
-  );
+  const index = (await getJSON<string[]>(INDEX_KEY)) || [];
+  const exams = await Promise.all(index.map((id) => getExam(id)));
   return exams.filter((e): e is ExamRecord => e !== null);
 }
 
 export async function clearAllExams(): Promise<number> {
-  const index = (await redis.get<string[]>(INDEX_KEY)) || [];
+  const index = (await getJSON<string[]>(INDEX_KEY)) || [];
   if (index.length === 0) return 0;
 
   // Delete all exam records
