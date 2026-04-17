@@ -221,6 +221,157 @@ async function gradeSubjectiveQuestion(
   return { score: 0, maxScore, feedback: "评分失败，请联系管理员" };
 }
 
+// Resolve { questionText, maxScore, studentAnswer } for a given answer rubric.
+// Handles both top-level questions and scenario sub-questions.
+function resolveSubjectiveInput(
+  questionId: string,
+  examAnswers: Record<string, string>
+): { questionText: string; maxScore: number; studentAnswer: string } | null {
+  const topQ = questions.find((q) => q.id === questionId);
+  const parentQ = topQ
+    ? null
+    : questions.find((pq) =>
+        pq.subQuestions?.some((sq) => sq.id === questionId)
+      );
+  const subQ = parentQ?.subQuestions?.find((sq) => sq.id === questionId);
+
+  if (!topQ && !subQ) return null;
+
+  let studentAnswer: string;
+  if (parentQ && subQ) {
+    try {
+      const parentAnswer = examAnswers[parentQ.id] || "{}";
+      const subAnswers = JSON.parse(parentAnswer);
+      studentAnswer = subAnswers[questionId] || "";
+    } catch {
+      studentAnswer = "";
+    }
+  } else {
+    studentAnswer = examAnswers[questionId] || "";
+  }
+
+  const questionText =
+    parentQ && subQ ? `${parentQ.text}\n\n${subQ.text}` : topQ!.text;
+  const maxScore = subQ ? subQ.maxScore : topQ!.maxScore;
+  return { questionText, maxScore, studentAnswer };
+}
+
+// Recompute breakdown and totalScore from a scores map.
+function recomputeBreakdown(scores: Record<string, QuestionScore>) {
+  const breakdown = {
+    choice: { score: 0, max: 26 },
+    multiChoice: { score: 0, max: 20 },
+    trueFalse: { score: 0, max: 20 },
+    shortAnswer: { score: 0, max: 20 },
+    scenario: { score: 0, max: 14 },
+  };
+
+  for (const q of questions) {
+    if (q.type === "choice" && scores[q.id]) {
+      breakdown.choice.score += scores[q.id].score;
+    } else if (q.type === "multiChoice" && scores[q.id]) {
+      breakdown.multiChoice.score += scores[q.id].score;
+    } else if (q.type === "trueFalse" && scores[q.id]) {
+      breakdown.trueFalse.score += scores[q.id].score;
+    } else if (q.type === "shortAnswer" && scores[q.id]) {
+      breakdown.shortAnswer.score += scores[q.id].score;
+    } else if (q.type === "scenario" && q.subQuestions) {
+      for (const sq of q.subQuestions) {
+        if (scores[sq.id]) breakdown.scenario.score += scores[sq.id].score;
+      }
+    }
+  }
+
+  const totalScore =
+    breakdown.choice.score +
+    breakdown.multiChoice.score +
+    breakdown.trueFalse.score +
+    breakdown.shortAnswer.score +
+    breakdown.scenario.score;
+  return { breakdown, totalScore };
+}
+
+/**
+ * Re-grade only the subjective questions whose existing feedback indicates a
+ * failure (e.g. transient GLM API errors). Preserves all successfully-scored
+ * questions. Returns a summary of how many were re-evaluated and how many
+ * recovered (i.e. stopped failing after the retry).
+ */
+export async function regradeFailedQuestions(exam: ExamRecord): Promise<{
+  attempted: number;
+  recovered: number;
+  stillFailing: string[];
+  scoreDelta: number;
+}> {
+  const failedIds: string[] = [];
+  for (const [qid, s] of Object.entries(exam.grading.scores)) {
+    if (s.feedback && s.feedback.includes("评分失败")) {
+      failedIds.push(qid);
+    }
+  }
+
+  if (failedIds.length === 0) {
+    return { attempted: 0, recovered: 0, stillFailing: [], scoreDelta: 0 };
+  }
+
+  // Look up rubrics for the failed questions
+  const rubricsById = new Map(
+    answers.filter((a) => a.rubric).map((a) => [a.questionId, a.rubric!])
+  );
+  const tasks = failedIds
+    .map((qid) => ({ qid, rubric: rubricsById.get(qid) }))
+    .filter((t) => t.rubric);
+
+  const results = await Promise.all(
+    tasks.map(async ({ qid, rubric }) => {
+      const input = resolveSubjectiveInput(qid, exam.answers);
+      if (!input) return { qid, result: null };
+      const { questionText, maxScore, studentAnswer } = input;
+      const result = await gradeSubjectiveQuestion(
+        qid,
+        questionText,
+        rubric!,
+        maxScore,
+        studentAnswer
+      );
+      return { qid, result };
+    })
+  );
+
+  const oldTotal = exam.grading.totalScore;
+  const newScores = { ...exam.grading.scores };
+  let recovered = 0;
+  const stillFailing: string[] = [];
+
+  for (const { qid, result } of results) {
+    if (!result) continue;
+    const isStillFailing = result.feedback?.includes("评分失败");
+    if (!isStillFailing) {
+      recovered += 1;
+      newScores[qid] = result;
+    } else {
+      stillFailing.push(qid);
+      // Keep old score (which is also 0 with "评分失败") but retain latest feedback
+      newScores[qid] = result;
+    }
+  }
+
+  const { breakdown, totalScore } = recomputeBreakdown(newScores);
+  await updateGrading(exam.id, {
+    status: "completed",
+    scores: newScores,
+    totalScore,
+    breakdown,
+  });
+
+  return {
+    attempted: failedIds.length,
+    recovered,
+    stillFailing,
+    scoreDelta: totalScore - oldTotal,
+  };
+}
+
 export async function gradeExam(exam: ExamRecord): Promise<void> {
   const scores: Record<string, QuestionScore> = {};
 
