@@ -44,13 +44,12 @@ export default async function ExamDetailPage({
       </div>
 
       {/* Breakdown */}
-      <div className="grid grid-cols-5 gap-3 mb-8">
+      <div className="grid grid-cols-4 gap-3 mb-8">
         {[
           { label: "选择题", ...exam.grading.breakdown.choice },
           { label: "多选题", ...(exam.grading.breakdown.multiChoice ?? { score: 0, max: 20 }) },
           { label: "判断题", ...exam.grading.breakdown.trueFalse },
           { label: "简答题", ...exam.grading.breakdown.shortAnswer },
-          { label: "场景分析", ...exam.grading.breakdown.scenario },
         ].map((b) => (
           <div
             key={b.label}

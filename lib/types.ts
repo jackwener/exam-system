@@ -41,7 +41,10 @@ export interface GradingBreakdown {
   multiChoice: { score: number; max: number };
   trueFalse: { score: number; max: number };
   shortAnswer: { score: number; max: number };
-  scenario: { score: number; max: number };
+  // Scenario questions are no longer part of the total score (many students
+  // lost sc1 answers to network issues). Field kept optional so historical
+  // records in Redis still parse.
+  scenario?: { score: number; max: number };
 }
 
 export interface Grading {

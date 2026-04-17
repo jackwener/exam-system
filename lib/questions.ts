@@ -1,10 +1,10 @@
 import type { Question, QuestionType, QuestionOption, SubQuestion } from "./types";
 
 const SECTIONS = {
-  choice: "一、选择题（每题 2 分，共 26 分）",
+  choice: "一、选择题（每题 3 分，共 39 分）",
   multiChoice: "二、多选题（每题 4 分，共 20 分）",
   trueFalse: "三、判断题（每题 2 分，共 20 分）",
-  shortAnswer: "四、简答题（每题 10 分，共 20 分）",
+  shortAnswer: "四、简答题（共 21 分）",
   scenario: "五、场景分析题（共 14 分）",
 } as const;
 
@@ -32,7 +32,7 @@ function choiceQ(
       label: String.fromCharCode(65 + i),
       text: t,
     })) as QuestionOption[],
-    maxScore: 2,
+    maxScore: 3,
   };
 }
 
@@ -232,7 +232,7 @@ export const questions: Question[] = [
   tfQ(9, "Qoder 中的 Quest 模式适用于探索性的问题诊断和技术调研。"),
   tfQ(10, `Spec Coding 中，Design 阶段的产出物包括架构图、数据模型和技术选型，而\u300c行为契约\u300d属于 Spec 阶段的产出物。`),
 
-  // ==================== 简答题（2 道，每题 10 分） ====================
+  // ==================== 简答题（sa1=10, sa2=11，共 21 分） ====================
   saQ(
     1,
     `Qoder 的智能体模式、专家团模式、智能问答、/plan 模式、Quest 模式 这五种模式分别适用于什么样的场景？请说明原因。`,
@@ -241,7 +241,7 @@ export const questions: Question[] = [
   saQ(
     2,
     "请简要描述 Spec Coding 六阶段各自回答的核心问题，以及三层简约视角如何将六个阶段分组。",
-    10
+    11
   ),
 
   // ==================== 场景分析题（共 14 分） ====================

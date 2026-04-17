@@ -257,13 +257,14 @@ function resolveSubjectiveInput(
 }
 
 // Recompute breakdown and totalScore from a scores map.
+// Scenario questions are intentionally excluded — sc1 lost too many answers
+// to network issues to be fair. Its answer data is kept but not scored.
 function recomputeBreakdown(scores: Record<string, QuestionScore>) {
   const breakdown = {
-    choice: { score: 0, max: 26 },
-    multiChoice: { score: 0, max: 20 },
-    trueFalse: { score: 0, max: 20 },
-    shortAnswer: { score: 0, max: 20 },
-    scenario: { score: 0, max: 14 },
+    choice: { score: 0, max: 39 },       // 13 × 3
+    multiChoice: { score: 0, max: 20 },  // 5 × 4
+    trueFalse: { score: 0, max: 20 },    // 10 × 2
+    shortAnswer: { score: 0, max: 21 },  // sa1=10 + sa2=11
   };
 
   for (const q of questions) {
@@ -275,20 +276,89 @@ function recomputeBreakdown(scores: Record<string, QuestionScore>) {
       breakdown.trueFalse.score += scores[q.id].score;
     } else if (q.type === "shortAnswer" && scores[q.id]) {
       breakdown.shortAnswer.score += scores[q.id].score;
-    } else if (q.type === "scenario" && q.subQuestions) {
-      for (const sq of q.subQuestions) {
-        if (scores[sq.id]) breakdown.scenario.score += scores[sq.id].score;
-      }
     }
+    // scenario type intentionally skipped
   }
 
   const totalScore =
     breakdown.choice.score +
     breakdown.multiChoice.score +
     breakdown.trueFalse.score +
-    breakdown.shortAnswer.score +
-    breakdown.scenario.score;
+    breakdown.shortAnswer.score;
   return { breakdown, totalScore };
+}
+
+/**
+ * Rescore an exam under the current point schema without re-running the AI.
+ *
+ * Each question type is rescaled based on its new maxScore (from questions.ts):
+ *   - choice: maxScore changed from 2 → 3. Preserve `correct` flag; score =
+ *     correct ? new max : 0.
+ *   - multiChoice: maxScore unchanged at 4. If the old score was 0 or max,
+ *     keep it; partial half-scores are rescaled proportionally.
+ *   - trueFalse: unchanged.
+ *   - shortAnswer (sa2): maxScore changed from 10 → 11. Score scaled
+ *     proportionally: new = round(old * 11 / old_max).
+ *   - scenario: no longer counted. Kept in `scores` for auditability but
+ *     excluded from breakdown and totalScore.
+ */
+export async function rescoreExam(exam: ExamRecord): Promise<{
+  oldTotal: number;
+  newTotal: number;
+  delta: number;
+}> {
+  const newScores: Record<string, QuestionScore> = { ...exam.grading.scores };
+
+  for (const q of questions) {
+    const old = newScores[q.id];
+    if (!old) continue;
+    const oldMax = old.maxScore || 1;
+
+    if (q.type === "choice") {
+      const correct = !!old.correct;
+      newScores[q.id] = {
+        score: correct ? q.maxScore : 0,
+        maxScore: q.maxScore,
+        correct,
+      };
+    } else if (q.type === "multiChoice") {
+      // Scale proportionally (half→half, full→full, zero→zero).
+      const ratio = oldMax > 0 ? old.score / oldMax : 0;
+      newScores[q.id] = {
+        score: Math.round(ratio * q.maxScore),
+        maxScore: q.maxScore,
+        correct: old.correct,
+      };
+    } else if (q.type === "trueFalse") {
+      const correct = !!old.correct;
+      newScores[q.id] = {
+        score: correct ? q.maxScore : 0,
+        maxScore: q.maxScore,
+        correct,
+      };
+    } else if (q.type === "shortAnswer") {
+      // Scale AI score proportionally to the new maxScore.
+      const scaled =
+        oldMax > 0 ? Math.round((old.score * q.maxScore) / oldMax) : 0;
+      newScores[q.id] = {
+        score: Math.min(Math.max(0, scaled), q.maxScore),
+        maxScore: q.maxScore,
+        feedback: old.feedback,
+      };
+    }
+    // scenario type and its sub-questions kept as-is; just not counted.
+  }
+
+  const oldTotal = exam.grading.totalScore;
+  const { breakdown, totalScore } = recomputeBreakdown(newScores);
+  await updateGrading(exam.id, {
+    status: "completed",
+    scores: newScores,
+    totalScore,
+    breakdown,
+  });
+
+  return { oldTotal, newTotal: totalScore, delta: totalScore - oldTotal };
 }
 
 /**

@@ -53,7 +53,6 @@ export default function ResultPage() {
     { label: "多选题（5 题）", ...(grading.breakdown.multiChoice ?? { score: 0, max: 20 }) },
     { label: "判断题（10 题）", ...grading.breakdown.trueFalse },
     { label: "简答题（2 题）", ...grading.breakdown.shortAnswer },
-    { label: "场景分析（1 题）", ...grading.breakdown.scenario },
   ];
 
   return (

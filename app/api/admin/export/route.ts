@@ -7,7 +7,7 @@ export async function GET() {
     (e) => e.submittedAt && e.grading.status === "completed"
   );
 
-  const header = "姓名,选择题,多选题,判断题,简答题,场景分析,总分,提交时间\n";
+  const header = "姓名,选择题 /39,多选题 /20,判断题 /20,简答题 /21,总分 /100,提交时间\n";
   const rows = completed
     .sort((a, b) => b.grading.totalScore - a.grading.totalScore)
     .map((e) => {
@@ -20,7 +20,6 @@ export async function GET() {
         e.grading.breakdown.multiChoice?.score ?? 0,
         e.grading.breakdown.trueFalse.score,
         e.grading.breakdown.shortAnswer.score,
-        e.grading.breakdown.scenario.score,
         e.grading.totalScore,
         time,
       ].join(",");

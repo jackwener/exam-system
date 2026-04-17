@@ -2,19 +2,6 @@ import { listExams } from "@/lib/kv";
 import Link from "next/link";
 import AdminSidebar from "@/components/AdminSidebar";
 import ClearDataButton from "@/components/ClearDataButton";
-import type { ExamRecord } from "@/lib/types";
-
-// 由于 sc1 场景题网络丢失严重，将其从总分中剔除。
-// 剩余满分 = 选择 26 + 多选 20 + 判断 20 + 简答 20 = 86
-// 显示总分按 (raw - 场景分) / 86 * 100 缩放到 100 分制。
-const SCALED_DENOMINATOR = 86;
-
-function computeDisplayScore(e: ExamRecord): number {
-  const raw = e.grading.totalScore;
-  const scenario = e.grading.breakdown.scenario?.score ?? 0;
-  const objectivesAndSA = raw - scenario;
-  return Math.round((objectivesAndSA / SCALED_DENOMINATOR) * 100);
-}
 
 function ScoreBadge({ score }: { score: number }) {
   let cls = "font-mono font-semibold text-[13px] px-2.5 py-0.5 rounded";
@@ -31,23 +18,24 @@ export default async function DashboardPage() {
   const completed = exams.filter(
     (e) => e.submittedAt && e.grading.status === "completed"
   );
+  const sorted = completed.sort(
+    (a, b) => b.grading.totalScore - a.grading.totalScore
+  );
 
-  // Decorate with display score and sort by it.
-  const rows = completed
-    .map((e) => ({ exam: e, displayScore: computeDisplayScore(e) }))
-    .sort((a, b) => b.displayScore - a.displayScore);
-
-  const totalCount = rows.length;
+  const totalCount = sorted.length;
   const avgScore =
     totalCount > 0
       ? Math.round(
-          (rows.reduce((sum, r) => sum + r.displayScore, 0) / totalCount) * 10
+          (sorted.reduce((sum, e) => sum + e.grading.totalScore, 0) /
+            totalCount) *
+            10
         ) / 10
       : 0;
-  const passCount = rows.filter((r) => r.displayScore >= 60).length;
-  const passRate = totalCount > 0 ? Math.round((passCount / totalCount) * 100) : 0;
+  const passCount = sorted.filter((e) => e.grading.totalScore >= 60).length;
+  const passRate =
+    totalCount > 0 ? Math.round((passCount / totalCount) * 100) : 0;
   const maxScore =
-    totalCount > 0 ? Math.max(...rows.map((r) => r.displayScore)) : 0;
+    totalCount > 0 ? Math.max(...sorted.map((e) => e.grading.totalScore)) : 0;
 
   const stats = [
     { label: "参考人数", value: totalCount.toString() },
@@ -65,7 +53,7 @@ export default async function DashboardPage() {
     <div className="flex min-h-screen">
       <AdminSidebar />
       <div className="flex-1 p-7">
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center justify-between mb-6">
           <h1 className="text-lg font-bold tracking-tight">成绩总览</h1>
           <div className="flex gap-2">
             <ClearDataButton />
@@ -77,10 +65,6 @@ export default async function DashboardPage() {
             </a>
           </div>
         </div>
-        <p className="text-xs text-text-muted mb-6">
-          场景分析题因网络问题不计入总分，当前满分按 100 分制显示（原 86 分 ×
-          100/86 缩放）
-        </p>
 
         {/* Stat cards */}
         <div className="grid grid-cols-4 gap-3 mb-6">
@@ -112,7 +96,7 @@ export default async function DashboardPage() {
                   姓名
                 </th>
                 <th className="text-left px-3.5 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-text-faint">
-                  选择题 /26
+                  选择题 /39
                 </th>
                 <th className="text-left px-3.5 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-text-faint">
                   多选题 /20
@@ -121,7 +105,7 @@ export default async function DashboardPage() {
                   判断题 /20
                 </th>
                 <th className="text-left px-3.5 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-text-faint">
-                  简答题 /20
+                  简答题 /21
                 </th>
                 <th className="text-left px-3.5 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-text-faint">
                   总分 /100
@@ -132,7 +116,7 @@ export default async function DashboardPage() {
               </tr>
             </thead>
             <tbody>
-              {rows.map(({ exam, displayScore }) => (
+              {sorted.map((exam) => (
                 <tr
                   key={exam.id}
                   className="border-b border-border-subtle last:border-b-0 hover:bg-surface-2 transition-colors"
@@ -158,7 +142,7 @@ export default async function DashboardPage() {
                     {exam.grading.breakdown.shortAnswer.score}
                   </td>
                   <td className="px-3.5 py-2.5">
-                    <ScoreBadge score={displayScore} />
+                    <ScoreBadge score={exam.grading.totalScore} />
                   </td>
                   <td className="px-3.5 py-2.5 font-mono text-xs text-text-faint">
                     {exam.submittedAt
@@ -170,7 +154,7 @@ export default async function DashboardPage() {
                   </td>
                 </tr>
               ))}
-              {rows.length === 0 && (
+              {sorted.length === 0 && (
                 <tr>
                   <td
                     colSpan={7}
