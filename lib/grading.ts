@@ -292,6 +292,66 @@ function recomputeBreakdown(scores: Record<string, QuestionScore>) {
 }
 
 /**
+ * Award full marks to any objective question (choice / multiChoice /
+ * trueFalse) whose student answer is empty. Intended as a "benefit of the
+ * doubt" policy when network issues cause some answer-save requests to be
+ * lost — the student showed up, so we assume they would have answered.
+ *
+ * Only touches objective questions; subjective answers are left as-is.
+ */
+export async function fillMissingObjectives(exam: ExamRecord): Promise<{
+  filled: number;
+  scoreDelta: number;
+  perType: Record<string, number>;
+}> {
+  const newScores = { ...exam.grading.scores };
+  let filled = 0;
+  const perType: Record<string, number> = {
+    choice: 0,
+    multiChoice: 0,
+    trueFalse: 0,
+  };
+
+  for (const ans of answers) {
+    if (!ans.correctAnswer) continue;
+    const q = questions.find((q) => q.id === ans.questionId);
+    if (!q) continue;
+    if (
+      q.type !== "choice" &&
+      q.type !== "multiChoice" &&
+      q.type !== "trueFalse"
+    )
+      continue;
+
+    const studentAnswer = (exam.answers[ans.questionId] || "").trim();
+    if (studentAnswer !== "") continue; // already answered — don't touch
+
+    newScores[ans.questionId] = {
+      score: q.maxScore,
+      maxScore: q.maxScore,
+      correct: true,
+    };
+    filled += 1;
+    perType[q.type] += 1;
+  }
+
+  if (filled === 0) {
+    return { filled: 0, scoreDelta: 0, perType };
+  }
+
+  const oldTotal = exam.grading.totalScore;
+  const { breakdown, totalScore } = recomputeBreakdown(newScores);
+  await updateGrading(exam.id, {
+    status: "completed",
+    scores: newScores,
+    totalScore,
+    breakdown,
+  });
+
+  return { filled, scoreDelta: totalScore - oldTotal, perType };
+}
+
+/**
  * Re-grade only the subjective questions whose existing feedback indicates a
  * failure (e.g. transient GLM API errors). Preserves all successfully-scored
  * questions. Returns a summary of how many were re-evaluated and how many
