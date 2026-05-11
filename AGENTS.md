@@ -43,7 +43,7 @@ specs/              Spec Coding 目录（每个需求一个 dir）
 
 ```bash
 pnpm install
-pnpm dev                # http://localhost:3000
+pnpm dev                # http://localhost:3001
 npx tsc --noEmit        # 类型检查
 pnpm lint               # 格式 / 风格
 ```

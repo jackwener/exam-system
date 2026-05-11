@@ -32,13 +32,13 @@
 git clone git@github.com:jackwener/exam-system.git
 cd exam-system
 pnpm install        # 或 npm install
-pnpm dev            # http://localhost:3000
+pnpm dev            # http://localhost:3001
 ```
 
 打开浏览器，两个入口：
 
-- `http://localhost:3000/exam` → 考生端：输姓名即开考
-- `http://localhost:3000/admin/login` → 管理后台，密码 `workshop2026`
+- `http://localhost:3001/exam` → 考生端：输姓名即开考
+- `http://localhost:3001/admin/login` → 管理后台，密码 `workshop2026`
 
 启动后 dashboard 一打开就有 3 份演示答卷（张高分 92 / 李及格 68 / 王挂科 42，来自 `lib/seed.ts`），不用先去考一遍才看得到东西。
 
