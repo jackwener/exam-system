@@ -100,12 +100,52 @@ function extractJson(text: string): string {
   return trimmed;
 }
 
+// ============================================================
+// Mock grader · workshop 模式专用
+//   没有 ANTHROPIC_API_KEY 时启用：根据答案长度粗略给分，
+//   让学员零配置即可跑完完整流程（考试 → 提交 → 评分 → 看成绩）
+//
+// 评分梯度（基于答案字符长度，避免"全员一样的分"显得太假）：
+//   < 5 字  → 0%   （视为未作答）
+//   < 30 字 → 50%
+//   < 100 字 → 70%
+//   >= 100 字 → 85%
+// ============================================================
+function mockGrade(maxScore: number, studentAnswer: string): { score: number; feedback: string } {
+  const trimmed = studentAnswer.trim();
+  const len = trimmed.length;
+  let ratio: number;
+  let comment: string;
+  if (len < 5) {
+    ratio = 0;
+    comment = "[mock] 回答过短或未作答";
+  } else if (len < 30) {
+    ratio = 0.5;
+    comment = "[mock] 答案较简略，按 50% 给分";
+  } else if (len < 100) {
+    ratio = 0.7;
+    comment = "[mock] 答案合理，按 70% 给分";
+  } else {
+    ratio = 0.85;
+    comment = "[mock] 答案完整，按 85% 给分";
+  }
+  return {
+    score: Math.round(maxScore * ratio),
+    feedback: `${comment} · workshop 模式（设置 ANTHROPIC_API_KEY 切回真实 LLM 评分）`,
+  };
+}
+
 async function callGradingApi(
   questionText: string,
   rubric: string,
   maxScore: number,
   studentAnswer: string
 ): Promise<{ score: number; feedback: string }> {
+  // workshop 模式：没配 API key 就走 mock，瞬时返回
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return mockGrade(maxScore, studentAnswer);
+  }
+
   const response = await anthropic.messages.create({
     model: "glm-4.5",
     max_tokens: 400,

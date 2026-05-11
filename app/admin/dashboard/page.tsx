@@ -63,6 +63,18 @@ export default async function DashboardPage() {
             >
               导出 CSV ↓
             </a>
+            {/* Workshop · Task 2: 实现"重评失败题"
+                  - 新建 POST /api/admin/regrade（lib/grading.ts 已有 regradeFailedQuestions 辅助函数）
+                  - 把下面 disabled 按钮改成调用该 API 的客户端组件
+                  - 详见 AGENTS.md
+            */}
+            <button
+              disabled
+              title="workshop task · 学员实现"
+              className="px-4 py-1.5 text-xs font-medium text-text-faint bg-surface-2 border border-dashed border-border rounded-md cursor-not-allowed"
+            >
+              重评失败题 (待实现)
+            </button>
           </div>
         </div>
 
@@ -122,6 +134,11 @@ export default async function DashboardPage() {
                   className="border-b border-border-subtle last:border-b-0 hover:bg-surface-2 transition-colors"
                 >
                   <td className="px-3.5 py-2.5 text-[13px] font-medium text-text">
+                    {/* Workshop · Task 1: 实现"答卷详情页"
+                          - 点击姓名应该进入答卷详情页（每题的对错 / 学员答案 / AI 评语）
+                          - 新建 app/admin/exam/[id]/page.tsx（server component，可直接 getExam()）
+                          - 详见 AGENTS.md
+                          - 注：现在点击会 404，待你实现 */}
                     <Link
                       href={`/admin/exam/${exam.id}`}
                       className="hover:text-accent transition-colors"

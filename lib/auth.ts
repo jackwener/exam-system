@@ -4,10 +4,12 @@ import { createHmac, timingSafeEqual } from "crypto";
 const COOKIE_NAME = "admin_token";
 const COOKIE_MAX_AGE = 86400; // 24 hours
 
+// Workshop default: 学员零配置即可登录。
+// 生产 / 培训当天主持人可设 ADMIN_PASSWORD 覆盖。
+const DEFAULT_ADMIN_PASSWORD = "workshop2026";
+
 function getSecret(): string {
-  // Derive signing secret from ADMIN_PASSWORD (required).
-  // If ADMIN_PASSWORD is empty, verification will fail by design.
-  return process.env.ADMIN_PASSWORD || "";
+  return process.env.ADMIN_PASSWORD || DEFAULT_ADMIN_PASSWORD;
 }
 
 function sign(payload: string): string {

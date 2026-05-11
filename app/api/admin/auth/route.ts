@@ -14,9 +14,10 @@ function safeEqual(a: string, b: string): boolean {
 export async function POST(request: Request) {
   try {
     const { password } = await request.json();
-    const adminPassword = process.env.ADMIN_PASSWORD;
+    // Workshop default · 与 lib/auth.ts 的 DEFAULT_ADMIN_PASSWORD 对齐
+    const adminPassword = process.env.ADMIN_PASSWORD || "workshop2026";
 
-    if (!adminPassword || typeof password !== "string") {
+    if (typeof password !== "string") {
       return NextResponse.json({ error: "密码错误" }, { status: 401 });
     }
     if (!safeEqual(password, adminPassword)) {

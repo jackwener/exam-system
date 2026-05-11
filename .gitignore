@@ -5,3 +5,4 @@ node_modules
 .superpowers
 .vercel
 .env*.local
+tsconfig.tsbuildinfo

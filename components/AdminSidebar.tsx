@@ -5,6 +5,11 @@ import { usePathname } from "next/navigation";
 
 const navItems = [
   { href: "/admin/dashboard", label: "📊 成绩总览" },
+  // Workshop · Task 3: 实现"题型正确率统计"页
+  //   - 新建 app/admin/stats/page.tsx
+  //   - 统计每道客观题的正确率 / 每个题型的平均得分
+  //   - 详见 AGENTS.md
+  { href: "/admin/stats", label: "📈 题型正确率 (待实现)" },
 ];
 
 export default function AdminSidebar() {
