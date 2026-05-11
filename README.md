@@ -1,186 +1,174 @@
-# AI Coding Workshop 在线考试系统
+# AI Coding Workshop · Exam System Starter
 
-一套面向技术团队内训结业考试的轻量考试平台：考生答题 → AI 自动评分 → 管理员后台看成绩。支持客观题（选择 / 多选 / 判断）+ 主观题（简答 / 场景分析），主观题由 GLM / Claude 自动打分。
+> 这是企业 AI 培训配套的 **1 小时实操项目**。
+> 培训分享见 [vivo AI Coding 课件](http://120.79.157.186/)，本仓库是配套实操起步项目。
+>
+> 培训背景 / Slides → 课件
+> Agent 上下文 → [AGENTS.md](./AGENTS.md)
+> 本文件 → **给人看：怎么参加 workshop**
 
-## 功能
+---
 
-### 考生端
-- 链接 + 姓名即可开考（无需注册）
-- 单题模式，左右方向键切换
-- 答案**每次切题自动保存**（容忍网络抖动和刷新）
-- 20 分钟倒计时，最后 5 分钟变红闪烁，到时自动提交
-- 提交后轮询评分状态，完成后显示总分 + 各题型分数明细
+## 是什么
 
-### 管理员后台
-- 密码登录（HMAC-SHA256 签名 cookie，24h 过期）
-- 成绩总览：参考人数 / 平均分 / 及格率 / 最高分
-- 逐人查看答卷详情 + AI 评语
-- CSV 一键导出
-- 一键重评失败题（transient GLM API failure 恢复）
-- 未作答客观题按默认满分补齐（网络丢失补偿）
-- 清空所有考试数据（需二次输入确认）
+一套"半成品"的在线考试平台：
 
-### AI 自动评分
-- 客观题：与标准答案直接比对（多选题规则：全对满分、漏选半分、错选 0 分）
-- 主观题：调 LLM（默认 GLM-4.5，可切换到 Claude Haiku）按 rubric 评分
-- **4 次重试 + 指数退避**，抵抗高并发提交时的限流和瞬时错误
-- **Markdown code fence 自动剥离** — 处理 LLM 返回 ` ```json ... ``` ` 包裹
-- 评分 prompt 强调「合情合理就给分」，扣分必须在 feedback 里举证
+- ✅ **考生端**（前台）完整：开考 → 答题 → 自动保存 → 倒计时 → 提交 → 看 AI 评分
+- ❌ **管理端**（后台）部分缺失：3 个功能留给你（学员）在 1 小时内**用 AI 协作**做完
 
-## 技术栈
+**目标不是"做完功能"**，而是**亲身体验**前面讲的方法论（Spec / Rules / Skill / 专家团 / business-logic）。完成后你应该能说出："原来 spec 是这样救命的"、"原来 Rule 真的能压过模型直觉"。
 
-- **Next.js 16**（App Router、Server Components、Proxy middleware）
-- **TypeScript + Tailwind CSS v4**
-- **Redis（ioredis）** — 存考卷 / 答案 / 评分
-- **Anthropic SDK + 自定义 baseURL** — 兼容智谱 GLM 等 Anthropic 协议 LLM
-- **PM2** 进程守护 + systemd 自启
+## 谁来用
 
-## 部署（阿里云 ECS / 任何 Linux 服务器）
+- 听完培训正文的参与者
+- 已经用过 Coding Agent（Qoder / Cursor / Claude Code 都可以）
+- 自带一台能跑 Node 20+ 的笔记本
 
-### 1. 系统依赖
+---
+
+## 快速开始（环境就绪 5 分钟）
 
 ```bash
-# Node.js 20+（Alibaba Cloud Linux / Anolis 示例）
-dnf install -y nodejs git redis
-
-# PM2
-npm install -g pm2
-
-# Redis 启动
-systemctl enable --now redis
-redis-cli ping  # → PONG
-```
-
-### 2. 拉代码并安装
-
-```bash
-git clone git@github.com:YOUR_USER/exam-system.git
+git clone git@github.com:jackwener/exam-system.git
 cd exam-system
-npm install
+pnpm install        # 或 npm install
+pnpm dev            # http://localhost:3000
 ```
 
-### 3. 配环境变量
+打开浏览器，两个入口：
 
-创建 `.env.local`（**不要提交到 git**）：
+- `http://localhost:3000/exam` → 考生端：输姓名即开考
+- `http://localhost:3000/admin/login` → 管理后台，密码 `workshop2026`
 
-```bash
-# LLM（智谱 GLM-4.5 示例，也可换成官方 Claude）
-ANTHROPIC_API_KEY=你的API密钥
-ANTHROPIC_BASE_URL=https://open.bigmodel.cn/api/anthropic
+启动后 dashboard 一打开就有 3 份演示答卷（张高分 92 / 李及格 68 / 王挂科 42，来自 `lib/seed.ts`），不用先去考一遍才看得到东西。
 
-# 管理员登录密码
-ADMIN_PASSWORD=workshop2026
+### 不需要 API Key
 
-# 本地 Redis
-REDIS_URL=redis://127.0.0.1:6379
+默认走 **mock grader**——简答题按答案长度阶梯给分（< 30 字 50% / < 100 字 70% / 否则 85%）。不配 `ANTHROPIC_API_KEY` 也能完整跑通考试 → 提交 → 评分 → 看成绩。
 
-# 监听端口
-PORT=18888
-NODE_ENV=production
-```
+主持人当天会用一台配了真实 GLM key 的机器做 demo。
 
-### 4. 构建并启动
+---
 
-```bash
-npm run build
+## 你的任务（3 个必做）
 
-cat > ecosystem.config.js <<'EOF'
-module.exports = {
-  apps: [{
-    name: 'exam',
-    cwd: __dirname,
-    script: 'node_modules/next/dist/bin/next',
-    args: 'start -p 18888',
-    env: { NODE_ENV: 'production', PORT: '18888' },
-  }],
-};
-EOF
+每个 task 都自带"被点击但 404"的入口提示——按线索走即可。建议串行做，先 T1 → T2 → T3。
 
-pm2 start ecosystem.config.js
-pm2 save
-pm2 startup systemd -u root --hp /root
-```
+### Task 1 · 答卷详情页
 
-### 5. 放行端口
+dashboard 上每个学员姓名是链接，但点击 **404**。
 
-- **阿里云 ECS** → 安全组入方向添加 `TCP 18888`
-- **本机防火墙** → `firewall-cmd --permanent --add-port=18888/tcp && firewall-cmd --reload`
+- 新建 `app/admin/exam/[id]/page.tsx`（server component，直接 `await getExam(id)`）
+- 展示：姓名 / 总分 / 各题型得分；逐题展示题干 / 学员答案 / 标答 / 单题得分 / AI 评语
+- 不需要新建 API（server component 直接读 kv）
+- **建议先读**：[`.qoder/business-logic/question-types.md`](./.qoder/business-logic/question-types.md)
 
-访问 `http://your.server.ip:18888/exam`
+### Task 2 · 重评失败题
 
-### 6. 更新流程
+dashboard 上有个 disabled 的"重评失败题"按钮，把它接通。
 
-项目根目录自带 `deploy.sh`：
+- 新建 `app/api/admin/regrade/route.ts`（POST，body `{ examId }`）
+- 直接调 `lib/grading.ts` 已有的 `regradeFailedQuestions(exam)`——**你只需写薄薄一层 route handler**
+- 把 disabled 按钮替换成 client 组件，参考 `components/ClearDataButton.tsx`
+- **建议先读**：[`.qoder/business-logic/grading-pipeline.md`](./.qoder/business-logic/grading-pipeline.md)
 
-```bash
-./deploy.sh
-```
+### Task 3 · 题型正确率统计
 
-依次执行 `git pull` → `npm install` → `npm run build` → `pm2 restart exam`。
+侧边栏的"📈 题型正确率"链接指向 `/admin/stats`，**目前 404**。
 
-## 试卷内容定制
+- 新建 `app/admin/stats/page.tsx`
+- 聚合所有完成的答卷，输出：
+  - 每个题型的平均得分百分比（选择题 78% / 判断题 65%…）
+  - 每道客观题的正确率（c5 = 45% → 一半人答错）
+- **纯 CSS** 表格 + `<div style={{width:'78%'}}>` 进度条——**不要引图表库**
 
-所有题目、答案、评分标准都在 `lib/` 下的静态文件：
+---
 
-- `lib/questions.ts` — 题目（按 section 分组，choiceQ/mcQ/tfQ/saQ/scQ 5 种辅助函数）
-- `lib/answers.ts` — 标准答案（客观题）+ 评分 rubric（主观题）
-- `lib/types.ts` — 类型定义
+## 1 小时实验节奏（推荐）
 
-改完题目 `npm run build` 再 `pm2 restart` 即可。
-
-### 分值结构（示例）
-
-| 题型 | 题量 | 单题分 | 小计 |
-|------|------|--------|------|
-| 选择题 | 13 | 3 | 39 |
-| 多选题 | 5 | 4 | 20 |
-| 判断题 | 10 | 2 | 20 |
-| 简答题 | 2 | 10-11 | 21 |
-| **合计** | **30** | | **100** |
-
-## Admin API
-
-都需要管理员 cookie（通过 `/admin/login` 登录后获得）。
-
-| 端点 | 方法 | 作用 |
-|------|------|------|
-| `/api/admin/auth` | POST | 登录 |
-| `/api/admin/export` | GET | 下载成绩 CSV |
-| `/api/admin/clear` | POST | 清空所有考试数据 |
-| `/api/admin/regrade` | POST | 重评失败主观题（`{all:true}` 或 `{examId}`）|
-| `/api/admin/fill-missing` | POST | 未作答客观题按满分补齐 |
-| `/api/admin/rescore-all` | POST | 按当前 `questions.ts` 分值重算所有历史考卷 |
-
-## 项目结构
+每个阶段都有对应的 Skill 引导。**所有 Skill 都在 [`.qoder/skills/`](./.qoder/skills/)**，每个一个目录加一个 `SKILL.md`。
 
 ```
+00-05  环境就绪 · pnpm install + pnpm dev + 登录后台确认 seed 数据
+05-15  Task 1 一次性走完整套方法论
+        ├─ /think        ← 列 Goal / Non-Goals / 影响范围 / 候选方案
+        ├─ 开 spec       ← cp -r specs/_template specs/2026-05-task-1-detail/
+        ├─ 填 proposal / tasks
+        ├─ 实施（/small-diff 心态）
+        ├─ /check        ← 看 diff / 跑 tsc / 手测
+        └─ /update-context ← 沉淀 gotcha 到 business-logic
+15-30  Task 2 同上节奏（应该更快，因为流程熟了）
+30-50  Task 3 比前两个稍复杂，可咨询 [fe-architect](./.qoder/agents/fe-architect.md) + [be-architect](./.qoder/agents/be-architect.md) 跨角色 review
+50-55  最终 /check 对照三任务的产出
+55-60  组内分享：每人一句"最意外的发现"
+```
+
+### 怎么"触发" Skill / Agent / Rule
+
+跟你用的 Coding Agent 工具有关，**约定俗成的方式**有几种：
+
+- **在 chat 里直接说**："用 `/think` Skill 帮我分析 Task 1"——大多数 Agent 会自动加载对应 `SKILL.md`
+- **`@mention` 文件**：`@.qoder/skills/think/SKILL.md 按这个流程走`
+- **告诉它读 README**："先读 README + AGENTS.md，按推荐流程做 Task 1"
+- **Rules**：L0 始终生效不用管；L1 按 globs 自动；L2 智能命中（不用手动）；L3 必须显式 `#mention`
+
+如果你用 **Qoder**：可以直接在专家团模式调用 [`.qoder/agents/*`](./.qoder/agents/)，配合 Skill 用。
+
+---
+
+## 项目里都有什么
+
+```text
 exam-system/
-├── app/
-│   ├── exam/                    # 考生端（/exam 入口、/exam/[id] 答题、/exam/[id]/result）
-│   ├── admin/                   # 管理后台（/admin/login、/admin/dashboard、/admin/exam/[id]）
-│   └── api/
-│       ├── exam/                # 考生端 API（start / save / submit / status / load）
-│       └── admin/               # 管理端 API（auth / export / clear / regrade / ...）
+├── AGENTS.md                  Agent 上下文（精简，~60 行）
+├── README.md                  ← 你正在看
+├── app/                       Next.js 16 App Router
+│   ├── exam/                  考生端 ✅
+│   ├── admin/                 管理后台（部分功能待补）
+│   └── api/                   后端 API
+├── components/                React 组件
 ├── lib/
-│   ├── questions.ts             # 题目数据
-│   ├── answers.ts               # 答案 + rubric
-│   ├── grading.ts               # 评分引擎（客观比对 + AI 调用 + 重试）
-│   ├── kv.ts                    # Redis 封装
-│   ├── auth.ts                  # HMAC cookie 签名
-│   └── types.ts
-├── components/                  # 前端组件
-├── proxy.ts                     # Next.js 16 middleware（/admin 和 /api/admin 鉴权）
-└── deploy.sh                    # 一键更新脚本
+│   ├── kv.ts                  内存 Map 存储（单例）
+│   ├── seed.ts                启动时注入 3 份演示答卷
+│   ├── grading.ts             评分（含 mock + 重试）
+│   ├── auth.ts                HMAC cookie
+│   ├── questions.ts           题库
+│   └── answers.ts             标答 + rubric
+├── proxy.ts                   admin 路径鉴权
+└── .qoder/                    团队工程化配置
+    ├── rules/                 L0-L3 共 6 条规则
+    ├── skills/                5 个起步 Skill（think/hunt/check/small-diff/update-context）
+    ├── agents/                4 个专家团角色（designer/fe/be/devops）
+    └── business-logic/        3 份业务文档（question-types / grading-pipeline / admin-auth）
+specs/                         Spec 目录
+└── _template/                 起步模板（proposal/design/tasks/progress/decisions）
 ```
 
-## 安全说明
+详细的 Agent 视角 / 渐进式披露映射表见 [AGENTS.md](./AGENTS.md)。
 
-- 管理员密码仅存在环境变量，**不入代码**
-- Cookie 用 `HMAC-SHA256(ADMIN_PASSWORD, payload)` 签名 + 时间戳，无法伪造
-- `proxy.ts` 统一拦截 `/admin/*` 和 `/api/admin/*`（放行 `/api/admin/auth`）
-- `.env.local` 在 `.gitignore` 中，私钥永不提交
-- 考生端 API 不需要认证（靠 nanoid(10) 生成的 examId 作为弱口令防护，适用于内部可信场景）
+---
+
+## 实验完成标准
+
+完成 1 小时实验后，每个学员应该能产出：
+
+- [ ] 一份**至少 2 任务**的 spec 目录（含 5 文件）
+- [ ] Task 1 / 2 / 3 的代码改动（至少跑通 Task 1）
+- [ ] 一条 gotcha 沉淀到 `.qoder/business-logic/`（或新建 `gotchas.md`）
+- [ ] 一句话感受："最意外的发现是 ___"
+
+不追求"3 个全做完且完美"——追求**真的走完了一次方法论闭环**。
+
+---
+
+## 资源
+
+- 培训正文 slides：http://120.79.157.186/
+- 配套培训文档：本仓库的 [`content/`](https://github.com/jackwener/vivo/tree/main/content)（在 `jackwener/vivo` 仓库下）
+- 出问题：先看 [`.qoder/rules/L0-protect-core.md`](./.qoder/rules/L0-protect-core.md) 的禁忌清单；还有问题问主持人
+
+---
 
 ## License
 
-MIT —— 欢迎 fork 作为你们自己 workshop / 培训的考试模板。
+MIT —— 欢迎 fork 作为你们团队的 AI 培训 starter。
