@@ -88,15 +88,32 @@ dashboard 上有个 disabled 的"重评失败题"按钮，把它接通。
 
 每个阶段都有对应的 Skill 引导。**所有 Skill 都在 [`.qoder/skills/`](./.qoder/skills/)**，每个一个目录加一个 `SKILL.md`。
 
+### Skill 一览（8 个）
+
+| Skill | 类 | 何时用 |
+|---|---|---|
+| [`/think`](./.qoder/skills/think/SKILL.md) | 认知 | 开工前澄清需求、列 Non-Goals、给候选方案 |
+| [`/challenge`](./.qoder/skills/challenge/SKILL.md) | 认知 | `/think` 后扮演反对方挑刺，让方案先经一轮对抗 |
+| [`/hunt`](./.qoder/skills/hunt/SKILL.md) | Debug | 遇到 bug 系统化排查根因 |
+| [`/check`](./.qoder/skills/check/SKILL.md) | 验证 | 任务完成前审查 diff |
+| [`/small-diff`](./.qoder/skills/small-diff/SKILL.md) | 代码 | 实施时控制改动范围，拒绝顺手优化 |
+| [`/summary`](./.qoder/skills/summary/SKILL.md) | 知识 | session 结束时总结：commit body / progress.md / 交接 |
+| [`/update-context`](./.qoder/skills/update-context/SKILL.md) | 知识 | 任务后把发现写回 business-logic（宽泛沉淀） |
+| [`/record-gotcha`](./.qoder/skills/record-gotcha/SKILL.md) | 知识 | 专门把"踩坑"沉淀进 gotchas.md（窄而结构化） |
+
+### 推荐流程
+
 ```
 00-05  环境就绪 · pnpm install + pnpm dev + 登录后台确认 seed 数据
 05-15  Task 1 一次性走完整套方法论
         ├─ /think        ← 列 Goal / Non-Goals / 影响范围 / 候选方案
+        ├─ /challenge    ← 扮演反对方挑刺（找致命/严重问题）
         ├─ 开 spec       ← cp -r specs/_template specs/2026-05-task-1-detail/
         ├─ 填 proposal / tasks
         ├─ 实施（/small-diff 心态）
         ├─ /check        ← 看 diff / 跑 tsc / 手测
-        └─ /update-context ← 沉淀 gotcha 到 business-logic
+        ├─ /summary      ← 写 commit body + 更新 progress.md
+        └─ /record-gotcha ← 沉淀踩坑（如有）
 15-30  Task 2 同上节奏（应该更快，因为流程熟了）
 30-50  Task 3 比前两个稍复杂，可咨询 [fe-architect](./.qoder/agents/fe-architect.md) + [be-architect](./.qoder/agents/be-architect.md) 跨角色 review
 50-55  最终 /check 对照三任务的产出

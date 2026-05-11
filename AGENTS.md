@@ -34,7 +34,7 @@ specs/              Spec Coding 目录（每个需求一个 dir）
 | 路径 | 何时读 |
 |---|---|
 | [`.qoder/rules/`](./.qoder/rules/) | L0 始终生效；L1 按 globs；L2 智能；L3 手动。开工前扫一遍清单 |
-| [`.qoder/skills/`](./.qoder/skills/) | `/think` `/hunt` `/check` `/small-diff` `/update-context` 五个工作流 |
+| [`.qoder/skills/`](./.qoder/skills/) | `/think` `/challenge` `/hunt` `/check` `/small-diff` `/summary` `/update-context` `/record-gotcha` 八个工作流 |
 | [`.qoder/agents/`](./.qoder/agents/) | designer / fe / be / devops 四角色咨询入口 |
 | [`.qoder/business-logic/`](./.qoder/business-logic/) | 涉及题型 / 评分 / 鉴权前必读对应那篇 |
 | [`specs/`](./specs/) | 当前任务的 proposal / design / tasks / progress / decisions |
