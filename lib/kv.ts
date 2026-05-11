@@ -11,9 +11,7 @@ import { seedExamData } from "./seed";
 // ============================================================
 
 declare global {
-  // eslint-disable-next-line no-var
   var __examStore: Map<string, string> | undefined;
-  // eslint-disable-next-line no-var
   var __examSeeded: boolean | undefined;
 }
 

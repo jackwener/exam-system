@@ -116,6 +116,81 @@ dashboard 上有个 disabled 的"重评失败题"按钮，把它接通。
 
 ---
 
+## CI / Pre-commit Hook · 工程约束驯服 Agent
+
+培训 `coperate-with-ai.md` §六讲的"用工程约束驯服 Agent"在本仓库**真的落地了**——不是 PPT 案例，而是 commit 时会真的拦你。
+
+### 在你这边长这样
+
+```bash
+$ pnpm install
+✓ 自动激活 .githooks/    ← 不需要单独 setup（package.json prepare 脚本）
+
+$ git commit -m "fix Task 1"
+▶ pre-commit · workshop checks
+
+  [1/3] check-no-reward-hack...
+        ✓ no reward hacking detected
+  [2/3] tsc --noEmit...
+        ✓ types ok
+  [3/3] eslint...
+        ✓ lint ok
+
+✓ all pre-commit checks passed
+[workshop abc1234] fix Task 1
+```
+
+如果你（或 Agent）有"作弊行为"，会被精确指出：
+
+```text
+❌ 检测到 .skip() / .only() / xit() / xdescribe() 被添加。
+
+🤖 GUIDANCE FOR THE AI AGENT:
+  跳过测试 = 暂时让 CI 闭眼，不是修问题。
+  如果 case 真的应该 skip（外部依赖 down / 平台限制），
+  请把它**完整删除**，并在 commit message 解释删除理由。
+  .only() 会让 CI 只跑这一个 case，**绝对不允许**入主分支。
+```
+
+### 检查项一览（`.githooks/pre-commit` + `scripts/check-no-reward-hack.sh`）
+
+| 检查 | 触发 |
+|---|---|
+| `tsc --noEmit` | 任何 TS 编译错 |
+| `eslint` | 任何 lint 错 |
+| 删测试 case | 在 `*.test.ts` / `*.spec.ts` / `__tests__/` 里减少 `it/test/describe` 行 |
+| `.skip()` / `.only()` / `xit()` / `xdescribe()` | 任何"跳过测试"标记 |
+| `@ts-ignore` / `@ts-expect-error` / `eslint-disable` 没 reason | 必须同行加 `reason: xxx` 注释 |
+| 删除 `expect/assert` | 让测试变空壳 |
+
+### 关键点：错误信息是给 Agent 的 prompt
+
+每条拒绝信息**第一行是给人看的诊断**，下面是 `🤖 GUIDANCE FOR THE AI AGENT:`——Agent 读 commit 失败的 stderr 时**会真的把这段当成新指令**，重新尝试时绕开 reward hacking。这是培训分享 §6 的核心 demo。
+
+### 绕不开的（按设计）
+
+- `git commit --no-verify` 在团队约定上视为**主动违规**，code review 会打回
+- 改 `eslint.config.mjs` / `tsconfig.json` 让规则变弱：检查不出，但 PR review 会发现
+
+详见 [`.qoder/rules/L0-protect-core.md`](./.qoder/rules/L0-protect-core.md) "不要绕开 CI" 段。
+
+### CI 端（GitHub Actions）
+
+[`.github/workflows/ci.yml`](./.github/workflows/ci.yml) 在 PR + push 时跑同样的 typecheck + lint + build，做双重保险——本地 hook 万一被人 `--no-verify` 绕过，CI 端兜底拦住。
+
+workshop 1 小时内不会真发 PR，但**配置本身是给学员看的模板**：「你回到公司也照这样配就行」。
+
+### 与培训的对应关系
+
+| 培训文档 | 落地点 |
+|---|---|
+| `coperate-with-ai.md` §6 工程约束驯服 Agent | 整套 hook |
+| `coperate-with-ai.md` `--no-verify` 拦截 demo | 嵌入 hook 错误信息的 GUIDANCE |
+| `team-skills.md` `/check` Skill | hook 实际上是 `/check` 的强制自动化版本 |
+| `L0-protect-core.md` "不要绕开 CI" 段 | 把这条规则**变成可执行的拦截** |
+
+---
+
 ## 项目里都有什么
 
 ```text
@@ -135,6 +210,12 @@ exam-system/
 │   ├── questions.ts           题库
 │   └── answers.ts             标答 + rubric
 ├── proxy.ts                   admin 路径鉴权
+├── .githooks/
+│   └── pre-commit             commit 前自动跑 typecheck + lint + reward-hack 检查
+├── .github/workflows/
+│   └── ci.yml                 PR + push 时跑 typecheck + lint + build
+├── scripts/
+│   └── check-no-reward-hack.sh  检测 Agent reward hacking 信号
 └── .qoder/                    团队工程化配置
     ├── rules/                 L0-L3 共 6 条规则
     ├── skills/                5 个起步 Skill（think/hunt/check/small-diff/update-context）

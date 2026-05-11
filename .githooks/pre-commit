@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+# ============================================================
+# Workshop pre-commit hook
+#
+# 跑顺序：
+#   1. check-no-reward-hack.sh  · 检测 Agent reward hacking 信号
+#   2. tsc --noEmit             · 类型检查
+#   3. eslint                   · 代码风格
+#
+# 任一失败 → 拒绝 commit，并输出可被 Agent 读懂的指导信息
+#
+# 绕开方法：✗ 没有。
+# `git commit --no-verify` 在工作流上**不被接受**——见
+# .qoder/rules/L0-protect-core.md。Agent 试图绕开会被 review 时打回。
+# ============================================================
+
+set -e
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+cd "$REPO_ROOT"
+
+echo "▶ pre-commit · workshop checks"
+echo ""
+
+# ------------------------------------------------------------
+# 1. Reward hacking 检查
+# ------------------------------------------------------------
+echo "  [1/3] check-no-reward-hack..."
+if ! bash "$REPO_ROOT/scripts/check-no-reward-hack.sh"; then
+  exit 1
+fi
+echo "        ✓ no reward hacking detected"
+echo ""
+
+# ------------------------------------------------------------
+# 2. TypeScript 类型检查
+# ------------------------------------------------------------
+echo "  [2/3] tsc --noEmit..."
+if ! pnpm exec tsc --noEmit > /tmp/tsc-output.log 2>&1; then
+  echo ""
+  echo "❌ TypeScript 类型检查未通过。"
+  echo ""
+  echo "🤖 GUIDANCE FOR THE AI AGENT:"
+  echo "  TypeScript 类型错误说明代码在编译时就会失败。"
+  echo "  不允许通过以下方式绕开：添加 @ts-ignore / @ts-expect-error / any 类型 /"
+  echo "  关闭 strict 模式。请定位 root cause 并修复类型契约。"
+  echo ""
+  echo "完整错误如下："
+  cat /tmp/tsc-output.log
+  exit 1
+fi
+echo "        ✓ types ok"
+echo ""
+
+# ------------------------------------------------------------
+# 3. ESLint
+# ------------------------------------------------------------
+echo "  [3/3] eslint..."
+if ! pnpm exec eslint . > /tmp/eslint-output.log 2>&1; then
+  echo ""
+  echo "❌ ESLint 检查未通过。"
+  echo ""
+  echo "🤖 GUIDANCE FOR THE AI AGENT:"
+  echo "  Lint 错误说明代码风格 / 潜在 bug 不符合项目标准。"
+  echo "  不允许通过 // eslint-disable 静默错误（除非加上 reason: 注释说明）。"
+  echo "  请逐条修复。"
+  echo ""
+  echo "完整错误如下："
+  cat /tmp/eslint-output.log
+  exit 1
+fi
+echo "        ✓ lint ok"
+echo ""
+
+echo "✓ all pre-commit checks passed"

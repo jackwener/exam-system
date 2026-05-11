@@ -17,6 +17,7 @@ export default function ResultPage() {
   const [grading, setGrading] = useState<GradingStatus | null>(null);
 
   useEffect(() => {
+    // eslint-disable-next-line prefer-const -- reason: timer 在 setInterval 之后才赋值，但 poll() 需要通过闭包访问以便完成时提前清理
     let timer: ReturnType<typeof setInterval>;
 
     const poll = async () => {
