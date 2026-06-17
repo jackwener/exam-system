@@ -112,11 +112,10 @@ dashboard 上有个 disabled 的"重评失败题"按钮，把它接通。
         ├─ 填 proposal / tasks
         ├─ 实施（/small-diff 心态）
         ├─ /check        ← 看 diff / 跑 tsc / 手测
-        ├─ /summary      ← 写 commit body + 更新 progress.md
-        └─ 切到 llm-wiki 窗口 /ingest 这份 summary
+        └─ /summary      ← 写 commit body + 更新 progress.md
 15-30  Task 2 同上节奏（应该更快，因为流程熟了）
 30-50  Task 3 比前两个稍复杂，可咨询 [fe-architect](./.qoder/agents/fe-architect.md) + [be-architect](./.qoder/agents/be-architect.md) 跨角色 review
-50-60  最终 /check 对照三任务的产出 + /query 验证 llm-wiki 闭环
+50-60  最终 /check 对照三任务的产出，确认 spec 与代码一致
 ```
 
 ### 怎么"触发" Skill / Agent / Rule
@@ -251,7 +250,7 @@ specs/                         Spec 目录
 
 - [ ] 一份完整的 spec 目录（含 5 文件）
 - [ ] Task 1 / 2 / 3 的代码改动（至少跑通 Task 1）
-- [ ] Task 的 `/summary` 已 ingest 到 llm-wiki
+- [ ] 每个 Task 结束写了 `/summary`（commit body + 更新 progress.md）
 
 不追求"3 个全做完且完美"——追求**真的走完了一次方法论闭环**。
 
